@@ -1,8 +1,8 @@
 <template>
-    <div class="justify-center flex bg-yellow-300 items-center h-screen">
-        <div class="text-4xl">
-            Hello
-        </div>
+    <div class="w-full">
+        <router-link to="/sudoku">
+            SUDOKU
+        </router-link>
     </div>
 </template>
 

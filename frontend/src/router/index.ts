@@ -1,12 +1,18 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 import Main from "@views/main/Main.vue";
+import Sudoku from "@views/sudoku/Sudoku.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
         path: "/",
         name: "Main",
         component: Main
+    },
+    {
+        path: "/sudoku",
+        name: "Sudoku",
+        component: Sudoku,
     },
     // {
     //     path: '/about',
