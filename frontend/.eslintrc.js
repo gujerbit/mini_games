@@ -40,5 +40,6 @@ module.exports = {
                 ],
             }
         ],
+        "@typescript-eslint/no-array-constructor": "off"
     }
 }
