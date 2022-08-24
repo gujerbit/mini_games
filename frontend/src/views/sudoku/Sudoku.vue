@@ -4,7 +4,7 @@
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
                 <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center">
-                    <p class="text-xl">{{ row.value ? row.value : "" }}</p>
+                    <p :class="row.duplicate ? 'text-red-400' : ''" class="text-xl">{{ row.value ? row.value : "" }}</p>
                 </div>
             </template>
 
@@ -28,7 +28,7 @@ export default defineComponent({
         const sudokuList = ref(new Array());
         const tempSudokuList = ref(new Array());
         const createGameFinish = ref(true);
-        const currentCellIndex = ref(0);
+        const currentCellIndex = ref(-1);
         const currentStatus = ref("Start");
 
         function createBoard () {
@@ -262,6 +262,7 @@ export default defineComponent({
                         value: sudokuList.value[i][j],
                         fixed: sudokuList.value[i][j] ? true : false,
                         select: false,
+                        duplicate: false,
                     };
                 }
             }
@@ -271,11 +272,27 @@ export default defineComponent({
         }
 
         function onClickCell (cellIndex:number) {
-            console.log(cellIndex);
-            sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].select = false;
-            sudokuList.value[Math.floor(cellIndex / 9)][cellIndex % 9].select = true;
-            currentCellIndex.value = cellIndex;
+            if (currentCellIndex.value !== -1) {
+                sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].select = false;
+            }
+
+            if (cellIndex !== currentCellIndex.value) {
+                sudokuList.value[Math.floor(cellIndex / 9)][cellIndex % 9].select = true;
+                currentCellIndex.value = cellIndex;
+            } else {
+                currentCellIndex.value = -1;
+            }
         }
+
+        function onKeydownCell ($event:KeyboardEvent) {
+            if (currentCellIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
+                return;
+            }
+
+            sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
+        }
+
+        window.addEventListener("keydown", onKeydownCell);
 
         return {
             sudokuList,
@@ -284,6 +301,7 @@ export default defineComponent({
             currentStatus,
             createBoard,
             onClickCell,
+            onKeydownCell,
         };
     },
 });
