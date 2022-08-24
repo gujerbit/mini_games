@@ -214,9 +214,88 @@ export default defineComponent({
             }
         }
 
-        // function validateCell (value:number) {
-            
-        // }
+        function validateCell (cellIndex:number) {
+            const columnList = sudokuList.value[Math.floor(cellIndex / 9)];
+            const rowList = new Array();
+            const regionList = new Array();
+            const currentValue = sudokuList.value[Math.floor(cellIndex / 9)][Math.floor(cellIndex % 9)].value;
+
+            for (let i = 0; i < 9; i++) {
+                rowList.push(sudokuList.value[i][Math.floor(cellIndex % 9)]);
+            }
+
+            for (let i = Math.floor(Math.floor(cellIndex / 9) / 3) * 3; i < Math.floor(Math.floor(cellIndex / 9) / 3) * 3 + 3; i++) {
+                for (let j = Math.floor(cellIndex % 9 / 3) * 3; j < Math.floor(cellIndex % 9 / 3) * 3 + 3; j++) {
+                    regionList.push(sudokuList.value[i][j]);
+                }
+            }
+
+            for (let i = 1; i <= 9; i++) {
+                let columnDuplicateCount = 0;
+                let rowDuplicateCount = 0;
+                let regionDuplicateCount = 0;
+
+                columnList.forEach((column:any) => { 
+                    if (i == column.value) {
+                        columnDuplicateCount++;
+                    }
+                });
+
+                rowList.forEach((row:any) => {
+                    if (i == row.value) {
+                        rowDuplicateCount++;
+                    }
+                });
+
+                regionList.forEach((region:any) => {
+                    if (i == region.value) {
+                        regionDuplicateCount++;
+                    }
+                });
+
+                if (columnDuplicateCount > 1) {
+                    columnList.forEach((column:any) => { 
+                        if (i == column.value) {
+                            column.duplicate = true;
+                        }
+                    }); 
+                } else {
+                    columnList.forEach((column:any) => { 
+                        if (i == column.value) {
+                            column.duplicate = false;
+                        }
+                    }); 
+                }
+
+                if (rowDuplicateCount > 1) {
+                    rowList.forEach((row:any) => { 
+                        if (i == row.value) {
+                            row.duplicate = true;
+                        }
+                    }); 
+                } else {
+                    rowList.forEach((row:any) => { 
+                        if (i == row.value) {
+                            row.duplicate = false;
+                        }
+                    }); 
+                }
+
+                if (regionDuplicateCount > 1) {
+                    regionList.forEach((region:any) => { 
+                        if (i == region.value) {
+                            region.duplicate = true;
+                        }
+                    }); 
+                } else {
+                    regionList.forEach((region:any) => { 
+                        if (i == region.value) {
+                            region.duplicate = false;
+                        }
+                    }); 
+                }
+            }
+        }
 
         function updateRandomColumn () {
             for (let i = 0; i < 9; i++) {
@@ -290,6 +369,8 @@ export default defineComponent({
             }
 
             sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
+
+            validateCell(currentCellIndex.value);
         }
 
         window.addEventListener("keydown", onKeydownCell);
