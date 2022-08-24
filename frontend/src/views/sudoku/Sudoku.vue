@@ -3,8 +3,8 @@
         <div id="sudoku-container" class="w-150 h-150 mx-auto mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
-                <div v-for="(row, rowIndex) in column" :key="rowIndex" class="w-15 h-15 border border-black rounded flex justify-center items-center">
-                    <p class="text-xl">{{ row ? row : "" }}</p>
+                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center">
+                    <p class="text-xl">{{ row.value ? row.value : "" }}</p>
                 </div>
             </template>
 
@@ -16,7 +16,7 @@
             </template>
         </div>
 
-        <custom-button @click="createBoard" class="w-20 h-10 mt-2 bg-yellow-300" :disabled="false">Start</custom-button>
+        <custom-button @click="createBoard" class="w-20 h-10 mt-2 bg-yellow-300" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
     </div>
 </template>
 
@@ -27,9 +27,15 @@ export default defineComponent({
     setup () {
         const sudokuList = ref(new Array());
         const tempSudokuList = ref(new Array());
-        const createGameFinish = ref(false);
+        const createGameFinish = ref(true);
+        const currentCellIndex = ref(0);
+        const currentStatus = ref("Start");
 
         function createBoard () {
+            createGameFinish.value = false;
+            currentCellIndex.value = 0;
+            currentStatus.value = "Creating...";
+
             for (let i = 0; i < 9; i++) {
                 sudokuList.value[i] = new Array();
 
@@ -71,8 +77,18 @@ export default defineComponent({
             const validating = () => {
                 return new Promise<void>((resolve) => {
                     setTimeout(() => {
-                        if (tryCount % 5 === 0) {
+                        if (tryCount % 3 === 0) {
                             updateRandomColumn();
+                        }
+
+                        if (tryCount % 5000 === 0) {
+                            for (let i = 0; i < 9; i++) {
+                                sudokuList.value[i] = new Array();
+
+                                for (let j = 0; j < 9; j++) {
+                                    sudokuList.value[i][j] = Math.floor(Math.random() * 9) + 1;
+                                }
+                            }
                         }
 
                         if (validateColumn() && validateRow() && validateRegion()) {
@@ -198,9 +214,9 @@ export default defineComponent({
             }
         }
 
-        function validateCell (value:number) {
+        // function validateCell (value:number) {
             
-        }
+        // }
 
         function updateRandomColumn () {
             for (let i = 0; i < 9; i++) {
@@ -240,14 +256,34 @@ export default defineComponent({
                 }
             }
 
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    sudokuList.value[i][j] = {
+                        value: sudokuList.value[i][j],
+                        fixed: sudokuList.value[i][j] ? true : false,
+                        select: false,
+                    };
+                }
+            }
+
             createGameFinish.value = true;
+            currentStatus.value = "Restart";
+        }
+
+        function onClickCell (cellIndex:number) {
+            console.log(cellIndex);
+            sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].select = false;
+            sudokuList.value[Math.floor(cellIndex / 9)][cellIndex % 9].select = true;
+            currentCellIndex.value = cellIndex;
         }
 
         return {
             sudokuList,
             tempSudokuList,
             createGameFinish,
+            currentStatus,
             createBoard,
+            onClickCell,
         };
     },
 });
