@@ -1,23 +1,28 @@
 <template>
     <div class="w-full flex justify-center">
         <div class="mt-2 flex flex-col">
-            <custom-button @click="difficulty = 0" :class="[difficulty === 0 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
-            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
-            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
+            <custom-button @click="difficulty = 0" :class="[difficulty === 0 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
+            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
+            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
             <custom-button @click="createBoard" class="w-20 h-8 my-2 bg-yellow-400" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
         </div>
 
-        <div id="sudoku-container" :class="isGameClear ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center">
+        <div id="sudoku-container" :class="isGameClear ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center relative">
+            <div style="z-index: -1" class="grid grid-cols-3 absolute">
+                <div v-for="(background, backgroundIndex) in 9" :key="backgroundIndex" :class="background % 2 === 0 ? 'bg-gray-300' : 'bg-white'" class="w-49.5 h-49.5 rounded">
+                </div>
+            </div>
+
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
-                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center">
+                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white">
                     <p :class="row.duplicate ? 'text-red-400' : ''" class="text-xl">{{ row.value ? row.value : "" }}</p>
                 </div>
             </template>
 
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in tempSudokuList" :key="columnIndex + 'temp'" v-else>
-                <div v-for="(row, rowIndex) in column" :key="rowIndex" class="w-15 h-15 border border-black rounded flex justify-center items-center">
+                <div v-for="(row, rowIndex) in column" :key="rowIndex" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white">
                     <p class="text-xl">{{ row ? row : "" }}</p>
                 </div>
             </template>
@@ -38,6 +43,13 @@
                 <p>{{ incorrectCell }}</p>
             </div>
         </div>
+
+        <custom-popup ref="resultPopup" :width="100" :height="100">
+            <div class="w-full h-full flex flex-col justify-center items-center">
+                <p class="mt-24 text-3xl">SCORE: {{ gameScore }}</p>
+                <custom-button @click="resultPopup.closePopup" class="w-20 h-8 mt-40 bg-yellow-300">OK</custom-button>
+            </div>
+        </custom-popup>
     </div>
 </template>
 
@@ -85,6 +97,8 @@ export default defineComponent({
                 }
             }),
         });
+        const resultPopup = ref(null);
+        const gameScore = ref(0);
 
         let interval = 0;
 
@@ -96,6 +110,8 @@ export default defineComponent({
             playTime.value = 0;
             changeCell.value = 0;
             incorrectCell.value = 0;
+
+            clearInterval(interval);
 
             for (let i = 0; i < 9; i++) {
                 sudokuList.value[i] = new Array();
@@ -470,34 +486,37 @@ export default defineComponent({
         }
 
         function onKeydownCell ($event:KeyboardEvent) {
-
-
             if (currentCellIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
                 if ($event.key === "Backspace") {
                     sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = 0;
+
+                    validateCell(currentCellIndex.value) && incorrectCell.value++;
                 }
 
                 return;
             }
 
-            sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
-            changeCell.value++;
+            setTimeout(() => {
+                sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
+                changeCell.value++;
 
-            validateCell(currentCellIndex.value) && incorrectCell.value++;
+                validateCell(currentCellIndex.value) && incorrectCell.value++;
 
-            let isEmpty = false;
+                let isEmpty = false;
 
-            for (let i = 0; i < 9; i ++) {
-                sudokuList.value[i].forEach((column:any) => {
-                    if (column.value == 0) {
-                        isEmpty = true;
-                    }
-                });
-            }
+                for (let i = 0; i < 9; i ++) {
+                    sudokuList.value[i].forEach((column:any) => {
+                        if (column.value == 0) {
+                            isEmpty = true;
+                        }
+                    });
+                }
 
-            if (!isEmpty) {
-                validateGameClear();
-            }
+                if (!isEmpty) {
+                    currentCellIndex.value = -1;
+                    validateGameClear();
+                }
+            }, 100);
         }
 
         function validateGameClear () {
@@ -505,7 +524,31 @@ export default defineComponent({
                 isGameClear.value = true;
 
                 clearInterval(interval);
-                alert("Game Clear");
+                Object(resultPopup.value).openPopup();
+                recordGameScore();
+            }
+        }
+
+        async function recordGameScore () {
+            let total = 1000000;
+
+            total -= playTime.value * 100;
+            total -= changeCell.value * 100;
+            total -= incorrectCell.value * 1000;
+            total += difficulty.value * 100000;
+
+            const addScore = () => {
+                return new Promise<void>((resolve) => {
+                    setTimeout(() => {
+                        gameScore.value++;
+
+                        resolve();
+                    }, 10);
+                });
+            }
+
+            while (gameScore.value < total) {
+                await addScore();
             }
         }
 
@@ -522,6 +565,8 @@ export default defineComponent({
             changeCell,
             incorrectCell,
             computedPlayTime,
+            resultPopup,
+            gameScore,
             createBoard,
             onClickCell,
             onKeydownCell,

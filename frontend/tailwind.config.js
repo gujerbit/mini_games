@@ -27,6 +27,16 @@ module.exports = {
             full: "100%",
             "1/2": "50%",
         }),
+        margin: (theme, { negative }) => ({
+            auto: "auto",
+            ...theme("spaicing"),
+            ...negative(theme("spaicing")),
+        }),
+        padding: (theme, { negative }) => ({
+            auto: "auto",
+            ...theme("spaicing"),
+            ...negative(theme("spaicing")),
+        }),
         extend: {},
     },
     plugins: [],

@@ -6,11 +6,13 @@ import "@assets/styles/app.css";
 
 import CustomInput from "@ui/custom_input/CustomInput.vue";
 import CustomButton from "@ui/custom_button/CustomButton.vue";
+import CustomPopup from "@ui/custom_popup/CustomPopup.vue";
 
 const app = createApp(App);
 const componentList = [
     CustomInput,
     CustomButton,
+    CustomPopup,
 ];
 
 componentList.forEach((component) => {
