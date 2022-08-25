@@ -1,9 +1,9 @@
 <template>
     <div class="w-full flex justify-center">
         <div class="mt-2 flex flex-col">
-            <custom-button @click="difficulty = 0" :class="[difficulty === 0 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
-            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
-            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
+            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
+            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
+            <custom-button @click="difficulty = 3" :class="[difficulty === 3 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
             <custom-button @click="createBoard" class="w-20 h-8 my-2 bg-yellow-400" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
         </div>
 
@@ -16,7 +16,7 @@
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
                 <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white">
-                    <p :class="row.duplicate ? 'text-red-400' : ''" class="text-xl">{{ row.value ? row.value : "" }}</p>
+                    <p :class="(row.duplicateColumn || row.duplicateRow || row.duplicateRegion) ? 'text-red-400' : ''" class="text-xl">{{ row.value ? row.value : "" }}</p>
                 </div>
             </template>
 
@@ -64,7 +64,7 @@ export default defineComponent({
         const currentCellIndex = ref(-1);
         const currentStatus = ref("Start");
         const isGameClear = ref(true);
-        const difficulty = ref(0);
+        const difficulty = ref(1);
         const playTime = ref(0);
         const changeCell = ref(0);
         const incorrectCell = ref(0);
@@ -168,16 +168,16 @@ export default defineComponent({
                             }
                         }
 
-                        const columnCheck = validateColumn();
-                        const rowCheck = validateRow();
-                        const regionCheck = validateRegion();
+                        const checkColumn = validateColumn();
+                        const checkRow = validateRow();
+                        const checkRegion = validateRegion();
 
-                        if (columnCheck && rowCheck && regionCheck) {
+                        if (checkColumn && checkRow && checkRegion) {
                             checkBoard = true;
                         } else {
-                            !columnCheck && updateColumn();
-                            !rowCheck && updateRow();
-                            !regionCheck && updateRegion();
+                            !checkColumn && updateColumn();
+                            !checkRow && updateRow();
+                            !checkRegion && updateRegion();
 
                             tryCount++;
                         }
@@ -198,7 +198,7 @@ export default defineComponent({
             let checkColumn = true;
             
             for (let i = 0; i < 9; i++) {
-                if ([... new Set(sudokuList.value[i])].length !== 9) {
+                if ([... new Set(sudokuList.value[i].map((column:any) => column.value ? +column.value : column))].length !== 9) {
                     checkColumn = false;
                 }
             }
@@ -230,11 +230,11 @@ export default defineComponent({
                     rowList.push(sudokuList.value[j][i]);
                 }
 
-                if ([... new Set(rowList)].length !== 9) {
+                if ([... new Set(rowList.map((row:any) => row.value ? +row.value : row))].length !== 9) {
                     checkRow = false;
                 }
             }
-
+            
             return checkRow;
         }
 
@@ -273,7 +273,7 @@ export default defineComponent({
                     }
                 }
 
-                if ([... new Set(regionList)].length !== 9) {
+                if ([... new Set(regionList.map((region:any) => region.value ? +region.value : region))].length !== 9) {
                     checkRegion = false;
                 }
 
@@ -366,7 +366,7 @@ export default defineComponent({
                 if (columnDuplicateCount > 1) {
                     columnList.forEach((column:any) => { 
                         if (i == column.value) {
-                            column.duplicate = true;
+                            column.duplicateColumn = true;
                         }
                     });
 
@@ -374,7 +374,7 @@ export default defineComponent({
                 } else {
                     columnList.forEach((column:any) => { 
                         if (i == column.value) {
-                            column.duplicate = false;
+                            column.duplicateColumn = false;
                         }
                     }); 
                 }
@@ -382,7 +382,7 @@ export default defineComponent({
                 if (rowDuplicateCount > 1) {
                     rowList.forEach((row:any) => { 
                         if (i == row.value) {
-                            row.duplicate = true;
+                            row.duplicateRow = true;
                         }
                     });
 
@@ -390,7 +390,7 @@ export default defineComponent({
                 } else {
                     rowList.forEach((row:any) => { 
                         if (i == row.value) {
-                            row.duplicate = false;
+                            row.duplicateRow = false;
                         }
                     }); 
                 }
@@ -398,7 +398,7 @@ export default defineComponent({
                 if (regionDuplicateCount > 1) {
                     regionList.forEach((region:any) => { 
                         if (i == region.value) {
-                            region.duplicate = true;
+                            region.duplicateRegion = true;
                         }
                     });
 
@@ -406,7 +406,7 @@ export default defineComponent({
                 } else {
                     regionList.forEach((region:any) => { 
                         if (i == region.value) {
-                            region.duplicate = false;
+                            region.duplicateRegion = false;
                         }
                     }); 
                 }
@@ -459,7 +459,9 @@ export default defineComponent({
                         value: sudokuList.value[i][j],
                         fixed: sudokuList.value[i][j] ? true : false,
                         select: false,
-                        duplicate: false,
+                        duplicateColumn: false,
+                        duplicateRow: false,
+                        duplicateRegion: false,
                     };
                 }
             }
@@ -513,7 +515,6 @@ export default defineComponent({
                 }
 
                 if (!isEmpty) {
-                    currentCellIndex.value = -1;
                     validateGameClear();
                 }
             }, 100);
@@ -522,6 +523,7 @@ export default defineComponent({
         function validateGameClear () {
             if (validateColumn() && validateRow() && validateRegion()) {
                 isGameClear.value = true;
+                currentCellIndex.value = -1;
 
                 clearInterval(interval);
                 Object(resultPopup.value).openPopup();
@@ -530,25 +532,29 @@ export default defineComponent({
         }
 
         async function recordGameScore () {
-            let total = 1000000;
+            let total = 10000;
 
-            total -= playTime.value * 100;
-            total -= changeCell.value * 100;
-            total -= incorrectCell.value * 1000;
-            total += difficulty.value * 100000;
+            total -= playTime.value;
+            total -= changeCell.value * 10;
+            total -= incorrectCell.value * 100;
+            total += difficulty.value * 500;
 
             const addScore = () => {
                 return new Promise<void>((resolve) => {
                     setTimeout(() => {
-                        gameScore.value++;
+                        gameScore.value += Math.floor(Math.random() * 10) + 1;
 
                         resolve();
-                    }, 10);
+                    }, 1);
                 });
             }
 
             while (gameScore.value < total) {
                 await addScore();
+            }
+
+            if (gameScore.value < total) {
+                gameScore.value = total;
             }
         }
 
