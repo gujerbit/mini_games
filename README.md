@@ -1,9 +1,7 @@
 MINI GAMES
-
 ===
 
-* 스도쿠
-
+스도쿠
 ===
 
 ## Version 1.0
