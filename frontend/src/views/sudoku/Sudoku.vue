@@ -1,6 +1,13 @@
 <template>
-    <div class="w-full flex flex-col items-center">
-        <div id="sudoku-container" class="w-150 h-150 mx-auto mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center">
+    <div class="w-full flex justify-center">
+        <div class="mt-2 flex flex-col">
+            <custom-button @click="difficulty = 0" :class="[difficulty === 0 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
+            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
+            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? 'border border-black' : 'opacity-30', createGameFinish && isGameClear ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
+            <custom-button @click="createBoard" class="w-20 h-8 my-2 bg-yellow-400" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
+        </div>
+
+        <div id="sudoku-container" :class="isGameClear ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
                 <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center">
@@ -16,12 +23,26 @@
             </template>
         </div>
 
-        <custom-button @click="createBoard" class="w-20 h-10 mt-2 bg-yellow-300" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
+        <div class="mt-2 flex flex-col">
+            <div class="w-34 h-10 flex justify-center items-center border-2 border-black rounded">
+                <p class="text-xl">{{ computedPlayTime.hours }}:{{ computedPlayTime.minutes }}:{{ computedPlayTime.seconds }}</p>
+            </div>
+
+            <div class="w-34 h-10 my-2 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
+                <p class="mx-1">CHANGE: </p>
+                <p>{{ changeCell }}</p>
+            </div>
+
+            <div class="w-34 h-10 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
+                <p class="mx-1">INCORRECT: </p>
+                <p>{{ incorrectCell }}</p>
+            </div>
+        </div>
     </div>
 </template>
 
 <script lang="ts">
-import { ref, defineComponent } from "vue";
+import { computed, ref, defineComponent } from "vue";
 
 export default defineComponent({
     setup () {
@@ -30,11 +51,51 @@ export default defineComponent({
         const createGameFinish = ref(true);
         const currentCellIndex = ref(-1);
         const currentStatus = ref("Start");
+        const isGameClear = ref(true);
+        const difficulty = ref(0);
+        const playTime = ref(0);
+        const changeCell = ref(0);
+        const incorrectCell = ref(0);
+        const computedPlayTime = ref({
+            hours: computed(() => {
+                const time = Math.floor(playTime.value / 3600);
+
+                if (time > 9) {
+                    return time;
+                } else {
+                    return `0${time}`;
+                }
+            }),
+            minutes: computed(() => {
+                const time = Math.floor(playTime.value / 60 % 60);
+
+                if (time > 9) {
+                    return time;
+                } else {
+                    return `0${time}`;
+                }
+            }),
+            seconds: computed(() => {
+                const time = playTime.value % 60;
+
+                if (time > 9) {
+                    return time;
+                } else {
+                    return `0${time}`;
+                }
+            }),
+        });
+
+        let interval = 0;
 
         function createBoard () {
             createGameFinish.value = false;
             currentCellIndex.value = 0;
             currentStatus.value = "Creating...";
+            isGameClear.value = false;
+            playTime.value = 0;
+            changeCell.value = 0;
+            incorrectCell.value = 0;
 
             for (let i = 0; i < 9; i++) {
                 sudokuList.value[i] = new Array();
@@ -91,9 +152,17 @@ export default defineComponent({
                             }
                         }
 
-                        if (validateColumn() && validateRow() && validateRegion()) {
+                        const columnCheck = validateColumn();
+                        const rowCheck = validateRow();
+                        const regionCheck = validateRegion();
+
+                        if (columnCheck && rowCheck && regionCheck) {
                             checkBoard = true;
                         } else {
+                            !columnCheck && updateColumn();
+                            !rowCheck && updateRow();
+                            !regionCheck && updateRegion();
+
                             tryCount++;
                         }
 
@@ -115,20 +184,20 @@ export default defineComponent({
             for (let i = 0; i < 9; i++) {
                 if ([... new Set(sudokuList.value[i])].length !== 9) {
                     checkColumn = false;
-
-                    updateColumn(i);
                 }
             }
             
             return checkColumn;
         }
 
-        function updateColumn (i:number) {
-            while ([... new Set(sudokuList.value[i])].length !== 9) {
-                for (let j = 0; j < 8; j++) {
-                    for (let k = j + 1; k < 9; k++) {
-                        if (sudokuList.value[i][j] === sudokuList.value[i][k]) {
-                            sudokuList.value[i][k] = Math.floor(Math.random() * 9) + 1;
+        function updateColumn () {
+            for (let i = 0; i < 9; i++) {
+                while ([... new Set(sudokuList.value[i])].length !== 9) {
+                    for (let j = 0; j < 8; j++) {
+                        for (let k = j + 1; k < 9; k++) {
+                            if (sudokuList.value[i][j] === sudokuList.value[i][k]) {
+                                sudokuList.value[i][k] = Math.floor(Math.random() * 9) + 1;
+                            }
                         }
                     }
                 }
@@ -147,21 +216,27 @@ export default defineComponent({
 
                 if ([... new Set(rowList)].length !== 9) {
                     checkRow = false;
-
-                    updateRow(rowList, i);
                 }
             }
 
             return checkRow;
         }
 
-        function updateRow (rowList:Array<number>, i:number) {
-            while ([... new Set(rowList)].length !== 9) {
-                for (let j = 0; j < 8; j++) {
-                    for (let k = j + 1; k < 9; k++) {
-                        if (sudokuList.value[j][i] === sudokuList.value[k][i]) {
-                            sudokuList.value[k][i] = Math.floor(Math.random() * 9) + 1;
-                            rowList.splice(k, 1, sudokuList.value[k][i]);
+        function updateRow () {
+            for (let i = 0; i < 9; i++) {
+                const rowList = new Array();
+
+                for (let j = 0; j < 9; j++) {
+                    rowList.push(sudokuList.value[j][i]);
+                }
+
+                while ([... new Set(rowList)].length !== 9) {
+                    for (let j = 0; j < 8; j++) {
+                        for (let k = j + 1; k < 9; k++) {
+                            if (sudokuList.value[j][i] === sudokuList.value[k][i]) {
+                                sudokuList.value[k][i] = Math.floor(Math.random() * 9) + 1;
+                                rowList.splice(k, 1, sudokuList.value[k][i]);
+                            }
                         }
                     }
                 }
@@ -184,8 +259,6 @@ export default defineComponent({
 
                 if ([... new Set(regionList)].length !== 9) {
                     checkRegion = false;
-
-                    updateRegion(regionList, startColumn, startRow);
                 }
 
                 if ((startColumn + 1) % 3 === 0) {
@@ -199,17 +272,37 @@ export default defineComponent({
             return checkRegion;
         }
 
-        function updateRegion (regionList:Array<number>, startColumn:number, startRow:number) {
-            while ([... new Set(regionList)].length !== 9) {
-                for (let j = 0; j < 8; j++) {
-                    for (let k = j + 1; k < 9; k++) {
-                        if (regionList[j] === regionList[k]) {
-                            const randomValue = Math.floor(Math.random() * 9) + 1;
+        function updateRegion () {
+            let startColumn = 0;
+            let startRow = 0;
 
-                            sudokuList.value[Math.floor(k / 3) + (startColumn * 3)][(k % 3) + startRow * 3] = randomValue;
-                            regionList.splice(k, 1, randomValue);
+            for (let i = 0; i < 9; i++) {
+                const regionList = new Array();
+
+                for (let j = startColumn * 3; j < startColumn * 3 + 3; j++) {
+                    for (let k = startRow * 3; k < startRow * 3 + 3; k++) {
+                        regionList.push(sudokuList.value[j][k]);
+                    }
+                }
+
+                while ([... new Set(regionList)].length !== 9) {
+                    for (let j = 0; j < 8; j++) {
+                        for (let k = j + 1; k < 9; k++) {
+                            if (regionList[j] === regionList[k]) {
+                                const randomValue = Math.floor(Math.random() * 9) + 1;
+
+                                sudokuList.value[Math.floor(k / 3) + (startColumn * 3)][(k % 3) + startRow * 3] = randomValue;
+                                regionList.splice(k, 1, randomValue);
+                            }
                         }
                     }
+                }
+
+                if ((startColumn + 1) % 3 === 0) {
+                    startColumn = 0;
+                    startRow++;
+                } else {
+                    startColumn++;
                 }
             }
         }
@@ -218,7 +311,8 @@ export default defineComponent({
             const columnList = sudokuList.value[Math.floor(cellIndex / 9)];
             const rowList = new Array();
             const regionList = new Array();
-            const currentValue = sudokuList.value[Math.floor(cellIndex / 9)][Math.floor(cellIndex % 9)].value;
+
+            let isIncorrect = false;
 
             for (let i = 0; i < 9; i++) {
                 rowList.push(sudokuList.value[i][Math.floor(cellIndex % 9)]);
@@ -258,7 +352,9 @@ export default defineComponent({
                         if (i == column.value) {
                             column.duplicate = true;
                         }
-                    }); 
+                    });
+
+                    isIncorrect = true;
                 } else {
                     columnList.forEach((column:any) => { 
                         if (i == column.value) {
@@ -272,7 +368,9 @@ export default defineComponent({
                         if (i == row.value) {
                             row.duplicate = true;
                         }
-                    }); 
+                    });
+
+                    isIncorrect = true;
                 } else {
                     rowList.forEach((row:any) => { 
                         if (i == row.value) {
@@ -286,7 +384,9 @@ export default defineComponent({
                         if (i == region.value) {
                             region.duplicate = true;
                         }
-                    }); 
+                    });
+
+                    isIncorrect = true;
                 } else {
                     regionList.forEach((region:any) => { 
                         if (i == region.value) {
@@ -295,6 +395,8 @@ export default defineComponent({
                     }); 
                 }
             }
+
+            return isIncorrect;
         }
 
         function updateRandomColumn () {
@@ -317,7 +419,7 @@ export default defineComponent({
             let startRow = 0;
 
             for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 3; j++) {
+                for (let j = 0; j < 3 + difficulty.value; j++) {
                     const removeIndex = Math.floor(Math.random() * 9);
 
                     if (sudokuList.value[Math.floor(removeIndex / 3) + (startColumn * 3)][(removeIndex % 3) + startRow * 3]) {
@@ -348,6 +450,10 @@ export default defineComponent({
 
             createGameFinish.value = true;
             currentStatus.value = "Restart";
+
+            interval = setInterval(() => {
+                playTime.value++;
+            }, 1000);
         }
 
         function onClickCell (cellIndex:number) {
@@ -364,13 +470,43 @@ export default defineComponent({
         }
 
         function onKeydownCell ($event:KeyboardEvent) {
+
+
             if (currentCellIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
+                if ($event.key === "Backspace") {
+                    sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = 0;
+                }
+
                 return;
             }
 
             sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
+            changeCell.value++;
 
-            validateCell(currentCellIndex.value);
+            validateCell(currentCellIndex.value) && incorrectCell.value++;
+
+            let isEmpty = false;
+
+            for (let i = 0; i < 9; i ++) {
+                sudokuList.value[i].forEach((column:any) => {
+                    if (column.value == 0) {
+                        isEmpty = true;
+                    }
+                });
+            }
+
+            if (!isEmpty) {
+                validateGameClear();
+            }
+        }
+
+        function validateGameClear () {
+            if (validateColumn() && validateRow() && validateRegion()) {
+                isGameClear.value = true;
+
+                clearInterval(interval);
+                alert("Game Clear");
+            }
         }
 
         window.addEventListener("keydown", onKeydownCell);
@@ -380,6 +516,12 @@ export default defineComponent({
             tempSudokuList,
             createGameFinish,
             currentStatus,
+            isGameClear,
+            difficulty,
+            playTime,
+            changeCell,
+            incorrectCell,
+            computedPlayTime,
             createBoard,
             onClickCell,
             onKeydownCell,
