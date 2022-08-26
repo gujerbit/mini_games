@@ -1,10 +1,10 @@
 <template>
     <div class="w-full flex justify-center">
         <div class="mt-2 flex flex-col">
-            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-green-400">EASY</custom-button>
-            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-blue-400 my-2">NORMAL</custom-button>
-            <custom-button @click="difficulty = 3" :class="[difficulty === 3 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-20 h-8 bg-red-400">HARD</custom-button>
-            <custom-button @click="createBoard" class="w-20 h-8 my-2 bg-yellow-400" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
+            <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-green-400">EASY</custom-button>
+            <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-blue-400 my-2">NORMAL</custom-button>
+            <custom-button @click="difficulty = 3" :class="[difficulty === 3 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-red-400">HARD</custom-button>
+            <custom-button @click="createBoard" class="w-34 h-8 my-2 bg-yellow-400" :disabled="!createGameFinish">{{ currentStatus }}</custom-button>
         </div>
 
         <div id="sudoku-container" :class="isGameClear ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 mt-2 border-2 border-black rounded grid grid-cols-9 justify-items-center items-center relative">
@@ -15,7 +15,22 @@
 
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
-                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white">
+                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white relative">
+                    <div class="w-full h-full flex justify-between absolute text-xs text-gray-800">
+                        <div class="ml-1 flex flex-col justify-center">
+                            <!-- eslint-disable-next-line -->
+                            <template v-for="(memo, memoIndex) in memoList[rowIndex + (columnIndex * 9)]" :key="memoIndex">
+                                <p v-if="memoIndex < 3">{{ memo }}</p>
+                            </template>
+                        </div>
+                        <div class="mr-1 flex flex-col justify-center">
+                            <!-- eslint-disable-next-line -->
+                            <template v-for="(memo, memoIndex) in memoList[rowIndex + (columnIndex * 9)]" :key="memoIndex">
+                                <p v-if="memoIndex >= 3">{{ memo }}</p>
+                            </template>
+                        </div>
+                    </div>
+
                     <p :class="(row.duplicateColumn || row.duplicateRow || row.duplicateRegion) ? 'text-red-400' : ''" class="text-xl">{{ row.value ? row.value : "" }}</p>
                 </div>
             </template>
@@ -42,6 +57,23 @@
                 <p class="mx-1">INCORRECT: </p>
                 <p>{{ incorrectCell }}</p>
             </div>
+
+            <div class="w-34 h-58 my-2 flex flex-col border-2 border-black rounded whitespace-nowrap overflow-hidden">
+                <p class="p-1 text-xl text-center">MEMO</p>
+
+                <div class="p-1 flex justify-between">
+                    <custom-input @focus="focusingInput = true" @blur="focusingInput = false" v-model="memoValue" class="w-14 h-8"></custom-input>
+                    <custom-button @click="addMemo" class="w-14 h-8 bg-yellow-300 text-sm" :disabled="currentCellIndex === -1">ADD</custom-button>
+                </div>
+
+                <div v-if="currentCellIndex !== -1 && memoList[currentCellIndex]" class="p-1 w-full flex flex-col">
+                    <!-- eslint-disable-next-line -->
+                    <div v-for="(memo, memoIndex) in memoList[currentCellIndex]" :key="memoIndex" class="w-full flex justify-between">
+                        <p>{{ memo }}</p>
+                        <custom-button @click="removeMemo(memoIndex)" class="w-5 h-5 border-black text-xs">X</custom-button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <custom-popup ref="resultPopup" :width="100" :height="100">
@@ -54,7 +86,7 @@
 </template>
 
 <script lang="ts">
-import { computed, ref, defineComponent } from "vue";
+import { nextTick, watch, computed, ref, defineComponent } from "vue";
 
 export default defineComponent({
     setup () {
@@ -99,12 +131,25 @@ export default defineComponent({
         });
         const resultPopup = ref(null);
         const gameScore = ref(0);
+        const memoList = ref(new Array());
+        const memoValue = ref();
+        const focusingInput = ref(false);
+
+        watch(memoValue, async () => {
+            await nextTick();
+
+            memoValue.value = memoValue.value.substring(memoValue.value.length - 1);
+
+            if (memoValue.value == 0) {
+                memoValue.value = "";
+            }
+        });
 
         let interval = 0;
 
         function createBoard () {
             createGameFinish.value = false;
-            currentCellIndex.value = 0;
+            currentCellIndex.value = -1;
             currentStatus.value = "Creating...";
             isGameClear.value = false;
             playTime.value = 0;
@@ -488,8 +533,12 @@ export default defineComponent({
         }
 
         function onKeydownCell ($event:KeyboardEvent) {
+            if (focusingInput.value) {
+                return;
+            }
+
             if (currentCellIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
-                if ($event.key === "Backspace") {
+                if (currentCellIndex.value !== -1 && $event.key === "Backspace") {
                     sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = 0;
 
                     validateCell(currentCellIndex.value) && incorrectCell.value++;
@@ -558,6 +607,21 @@ export default defineComponent({
             }
         }
 
+        function addMemo () {
+            if (!memoList.value[currentCellIndex.value]) {
+                memoList.value[currentCellIndex.value] = new Array();
+            }
+
+            if (memoList.value[currentCellIndex.value].length < 6) {
+                memoList.value[currentCellIndex.value].push(memoValue.value);
+                memoValue.value = "";
+            }
+        }
+
+        function removeMemo (removeIndex:number) {
+            memoList.value[currentCellIndex.value].splice(removeIndex, 1);
+        }
+
         window.addEventListener("keydown", onKeydownCell);
 
         return {
@@ -573,9 +637,15 @@ export default defineComponent({
             computedPlayTime,
             resultPopup,
             gameScore,
+            memoList,
+            memoValue,
+            currentCellIndex,
+            focusingInput,
             createBoard,
             onClickCell,
             onKeydownCell,
+            addMemo,
+            removeMemo,
         };
     },
 });
