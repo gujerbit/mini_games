@@ -82,6 +82,15 @@
                 <custom-button @click="resultPopup.closePopup" class="w-20 h-8 mt-40 bg-yellow-300">OK</custom-button>
             </div>
         </custom-popup>
+
+        <footer class="w-full h-8 flex justify-center items-center fixed bottom-0 border-t border-black bg-white">
+            <p class="mr-2">&copy; jylee. All rights reserved.</p>
+            <p class="mr-2">Current Version: 1.1</p>
+            <p class="mr-2">Last Update: 2022-08-26</p>
+            <a href="https://github.com/gujerbit" target="_blank">
+                <img  src="@assets/images/github.png" alt="">
+            </a>
+        </footer>
     </div>
 </template>
 
@@ -155,6 +164,7 @@ export default defineComponent({
             playTime.value = 0;
             changeCell.value = 0;
             incorrectCell.value = 0;
+            memoList.value = new Array();
 
             clearInterval(interval);
 
