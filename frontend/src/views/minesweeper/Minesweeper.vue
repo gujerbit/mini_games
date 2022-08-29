@@ -21,11 +21,11 @@
         <div :style="[{ 'grid-template-columns': `repeat(${gameSettings.celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${gameSettings.celSize}, 1fr)` }]" class="w-150 h-150 mx-4 grid border-2 border-black">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in mineList" :key="columnIndex">
-                <div @click="createMine(columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open ? 'cursor-pointer hover:opacity-50' : ''" class="flex justify-center items-center text-xl border border-black duration-200">
-                    <!-- <template v-if="row.open"> -->
-                        <img class="p-2" v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/bomb.png" alt="">
+                <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open ? 'cursor-pointer hover:opacity-50' : 'bg-yellow-200'" class="flex justify-center items-center text-xl border border-black duration-200">
+                    <template v-if="row.open">
+                        <img v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/bomb.png" alt="" class="p-2 bg-white">
                         <p v-else>{{ row.celInfo ? row.celInfo : "" }}</p>
-                    <!-- </template> -->
+                    </template>
                 </div>
             </template>
         </div>
@@ -70,9 +70,9 @@ export default defineComponent({
             }
 
             for (let i = 0; i < gameSettings.value.mineCount; i++) {
-                const randomMineLocate = Math.floor(Math.random() * gameSettings.value.celSize ** 2);
-                const columnIndex = Math.floor(randomMineLocate / gameSettings.value.celSize);
-                const rowIndex = randomMineLocate % gameSettings.value.celSize;
+                const randomMineLocate = Math.floor(Math.random() * mineList.value.length ** 2);
+                const columnIndex = Math.floor(randomMineLocate / mineList.value.length);
+                const rowIndex = randomMineLocate % mineList.value.length;
 
                 if (!mineList.value[columnIndex][rowIndex].celInfo && !(selectColumnIndex === columnIndex && selectRowIndex === rowIndex)) {
                     mineList.value[columnIndex][rowIndex].celInfo = "mine";
@@ -87,31 +87,65 @@ export default defineComponent({
         }
 
         function updateMineInfo () {
-            for (let i = 0; i < gameSettings.value.celSize; i++) {
-                for (let j = 0; j < gameSettings.value.celSize; j++) {
+            for (let i = 0; i < mineList.value.length; i++) {
+                for (let j = 0; j < mineList.value.length; j++) {
                     validateNear(i, j);
                 }
             }
         }
 
-        function validateNear (column:number, row:number) {
-            if (mineList.value[column][row].celInfo === "mine") {
+        function validateNear (columnIndex:number, rowIndex:number) {
+            if (mineList.value[columnIndex][rowIndex].celInfo === "mine") {
                 return;
             }
 
             for (let i = -1; i <= 1; i++) {
-                if (column + i < 0 || column + i > gameSettings.value.celSize - 1) {
+                if (columnIndex + i < 0 || columnIndex + i > mineList.value.length - 1) {
                     continue;
                 }
 
                 for (let j = -1; j <= 1; j++) {
-                    if (row + j < 0 || row + j > gameSettings.value.celSize - 1) {
+                    if (rowIndex + j < 0 || rowIndex + j > mineList.value.length - 1 || mineList.value[columnIndex + i][rowIndex + j].celInfo !== "mine") {
                         continue;
                     }
 
-                    if (mineList.value[column + i][row + j].celInfo === "mine") {
-                        mineList.value[column][row].celInfo++;
-                    }
+                    mineList.value[columnIndex][rowIndex].celInfo++;
+                }
+            }
+        }
+
+        function onMousedownCel ($event:MouseEvent, columnIndex:number, rowIndex:number) {
+            $event.currentTarget?.addEventListener("contextmenu", (contextEvent:any) => {
+                contextEvent.preventDefault();
+            });
+
+            if (!isCreateMine.value) {
+                createMine(columnIndex, rowIndex);
+            }
+
+            if ($event.button === 0) {
+                openCel(columnIndex, rowIndex);
+            }
+        }
+
+        function openCel (columnIndex:number, rowIndex:number) {
+            if (mineList.value[columnIndex][rowIndex].open) {
+                return;
+            }
+
+            mineList.value[columnIndex][rowIndex].open = true;
+
+            if (mineList.value[columnIndex][rowIndex].celInfo) {
+                return;
+            }
+
+            for (let i = -1; i <= 1; i++) {
+                if (i !== 0 && columnIndex + i >= 0 && columnIndex + i <= mineList.value.length - 1) {
+                    openCel(columnIndex + i, rowIndex);
+                }
+
+                if (i !== 0 && rowIndex + i >= 0 && rowIndex + i <= mineList.value.length - 1) {
+                    openCel(columnIndex, rowIndex + i);
                 }
             }
         }
@@ -120,7 +154,7 @@ export default defineComponent({
             mineList,
             gameSettings,
             createGame,
-            createMine,
+            onMousedownCel,
         };
     },
 });
