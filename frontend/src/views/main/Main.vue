@@ -1,7 +1,11 @@
 <template>
-    <div class="w-full relative">
+    <div class="w-full flex flex-col relative">
         <router-link to="/sudoku">
             SUDOKU
+        </router-link>
+
+        <router-link to="/minesweeper">
+            MINESWEEPER
         </router-link>
     </div>
 </template>

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 import Main from "@views/main/Main.vue";
 import Sudoku from "@views/sudoku/Sudoku.vue";
+import Minesweeper from "@views/minesweeper/Minesweeper.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -13,6 +14,11 @@ const routes: Array<RouteRecordRaw> = [
         path: "/sudoku",
         name: "Sudoku",
         component: Sudoku,
+    },
+    {
+        path: "/minesweeper",
+        name: "Minesweeper",
+        component: Minesweeper,
     },
     // {
     //     path: '/about',

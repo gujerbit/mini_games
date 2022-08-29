@@ -1,6 +1,6 @@
 <template>
     <div class="w-full pb-10 flex justify-center">
-        <div class="mt-2 flex flex-col">
+        <div class="w-40 mt-2 flex flex-col items-end">
             <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-green-400">EASY</custom-button>
             <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-blue-400 my-2">NORMAL</custom-button>
             <custom-button @click="difficulty = 3" :class="[difficulty === 3 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-red-400">HARD</custom-button>
@@ -43,7 +43,7 @@
             </template>
         </div>
 
-        <div class="mt-2 flex flex-col">
+        <div class="w-40 mt-2 flex flex-col">
             <div class="w-34 h-10 flex justify-center items-center border-2 border-black rounded">
                 <p class="text-xl">{{ computedPlayTime.hours }}:{{ computedPlayTime.minutes }}:{{ computedPlayTime.seconds }}</p>
             </div>
@@ -83,14 +83,7 @@
             </div>
         </custom-popup>
 
-        <footer class="w-full h-8 flex justify-center items-center fixed bottom-0 border-t border-black bg-white">
-            <p class="mr-2">&copy; jylee. All rights reserved.</p>
-            <p class="mr-2">Current Version: 1.1</p>
-            <p class="mr-2">Last Update: 2022-08-26</p>
-            <a href="https://github.com/gujerbit" target="_blank">
-                <img  src="@assets/images/github.png" alt="">
-            </a>
-        </footer>
+        <custom-footer :version="'1.1'" :lastUpdate="'2022-08-26'"></custom-footer>
     </div>
 </template>
 
