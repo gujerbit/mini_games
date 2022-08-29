@@ -18,7 +18,7 @@
             <custom-button @click="createGame" class="w-34 h-8 my-2 bg-yellow-400" :disabled="false">{{ "Start" }}</custom-button>
         </div>
 
-        <div :style="[{ 'grid-template-columns': `repeat(${gameSettings.celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${gameSettings.celSize}, 1fr)` }]" class="w-150 h-150 mx-4 grid border-2 border-black">
+        <div :style="[{ 'grid-template-columns': `repeat(${celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${celSize}, 1fr)` }]" :class="(isDie || isGameClear) ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 grid border-2 border-black">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in mineList" :key="columnIndex">
                 <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open && !row.flag ? 'cursor-pointer hover:opacity-50' : getBackgroundColor(row)" class="flex justify-center items-center text-xl border border-black duration-200">
@@ -40,7 +40,7 @@
 
             <div class="w-34 h-10 my-2 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
                 <p class="mx-1">Mine Total: </p>
-                <p>{{ mineTotal }}</p>
+                <p>{{ flagCount }}</p>
             </div>
         </div>
 
@@ -60,13 +60,22 @@ export default defineComponent({
             mineCount: 10,
         });
         const isCreateMine = ref(false);
-        const mineTotal = ref(gameSettings.value.mineCount);
+        const flagCount = ref(gameSettings.value.mineCount);
         const playTime = ref(0);
+        const isDie = ref(false);
+        const isGameClear = ref(false);
+        const celSize = ref(0);
 
+        const MINETOTAL = gameSettings.value.mineCount;
+        
         let interval = 0;
 
         function createGame () {
             isCreateMine.value = false;
+            isDie.value = false;
+            playTime.value = 0;
+            isGameClear.value = false;
+            celSize.value = gameSettings.value.celSize;
 
             for (let i = 0; i < gameSettings.value.celSize; i++)    {
                 mineList.value[i] = new Array();
@@ -136,6 +145,7 @@ export default defineComponent({
         }
 
         function onMousedownCel ($event:MouseEvent, columnIndex:number, rowIndex:number) {
+            // eslint-disable-next-line
             $event.currentTarget?.addEventListener("contextmenu", (contextEvent:any) => {
                 contextEvent.preventDefault();
             });
@@ -159,6 +169,11 @@ export default defineComponent({
             mineList.value[columnIndex][rowIndex].open = true;
 
             if (mineList.value[columnIndex][rowIndex].celInfo) {
+                if (mineList.value[columnIndex][rowIndex].celInfo === "mine") {
+                    openMines();
+                    clearInterval(interval);
+                }
+
                 return;
             }
 
@@ -174,28 +189,60 @@ export default defineComponent({
         }
 
         function setFlag (columnIndex:number, rowIndex:number) {
-            if (mineTotal.value <= 0) {
+            if (flagCount.value <= 0) {
                 return;
             }
 
             if (mineList.value[columnIndex][rowIndex].flag) {
-                mineTotal.value++;
+                flagCount.value++;
             } else {
-                mineTotal.value--;
+                flagCount.value--;
             }
 
             mineList.value[columnIndex][rowIndex].flag = !mineList.value[columnIndex][rowIndex].flag;
         }
 
+        // eslint-disable-next-line
         function getBackgroundColor (cel:any) {
             return cel.flag ? "bg-green-200" : cel.celInfo === "mine" ? "bg-red-200" : "bg-yellow-200";
+        }
+
+        function openMines () {
+            isDie.value = true;
+
+            for (let i = 0; i < mineList.value.length; i++) {
+                for (let j = 0; j < mineList.value.length; j++) {
+                    if (mineList.value[i][j].celInfo === "mine" && !mineList.value[i][j].flag) {
+                        mineList.value[i][j].open = true;
+                    }
+                }
+            }
+        }
+
+        function validateGameClear () {
+            let validateMineTotal = 0;
+
+            for (let i = 0; i < mineList.value.length; i++) {
+                for (let j = 0; j < mineList.value.length; j++) {
+                    if (mineList.value[i][j].celInfo === "mine" && !mineList.value[i][j].open) {
+                        validateMineTotal++;
+                    }
+                }
+            }
+
+            if (validateMineTotal === MINETOTAL) {
+                isGameClear.value = true;
+            }
         }
 
         return {
             mineList,
             gameSettings,
-            mineTotal,
+            flagCount,
             playTime,
+            isDie,
+            isGameClear,
+            celSize,
             createGame,
             onMousedownCel,
             getBackgroundColor,

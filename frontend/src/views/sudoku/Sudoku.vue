@@ -217,6 +217,7 @@ export default defineComponent({
             let checkColumn = true;
             
             for (let i = 0; i < 9; i++) {
+                // eslint-disable-next-line
                 if ([... new Set(sudokuList.value[i].map((column:any) => column.value ? +column.value : column))].length !== 9) {
                     checkColumn = false;
                 }
@@ -249,6 +250,7 @@ export default defineComponent({
                     rowList.push(sudokuList.value[j][i]);
                 }
 
+                // eslint-disable-next-line
                 if ([... new Set(rowList.map((row:any) => row.value ? +row.value : row))].length !== 9) {
                     checkRow = false;
                 }
@@ -292,6 +294,7 @@ export default defineComponent({
                     }
                 }
 
+                // eslint-disable-next-line
                 if ([... new Set(regionList.map((region:any) => region.value ? +region.value : region))].length !== 9) {
                     checkRegion = false;
                 }
@@ -364,18 +367,21 @@ export default defineComponent({
                 let rowDuplicateCount = 0;
                 let regionDuplicateCount = 0;
 
+                // eslint-disable-next-line
                 columnList.forEach((column:any) => { 
                     if (i == column.value) {
                         columnDuplicateCount++;
                     }
                 });
 
+                // eslint-disable-next-line
                 rowList.forEach((row:any) => {
                     if (i == row.value) {
                         rowDuplicateCount++;
                     }
                 });
 
+                // eslint-disable-next-line
                 regionList.forEach((region:any) => {
                     if (i == region.value) {
                         regionDuplicateCount++;
@@ -383,6 +389,7 @@ export default defineComponent({
                 });
 
                 if (columnDuplicateCount > 1) {
+                    // eslint-disable-next-line
                     columnList.forEach((column:any) => { 
                         if (i == column.value) {
                             column.duplicateColumn = true;
@@ -391,6 +398,7 @@ export default defineComponent({
 
                     isIncorrect = true;
                 } else {
+                    // eslint-disable-next-line
                     columnList.forEach((column:any) => { 
                         if (i == column.value) {
                             column.duplicateColumn = false;
@@ -399,6 +407,7 @@ export default defineComponent({
                 }
 
                 if (rowDuplicateCount > 1) {
+                    // eslint-disable-next-line
                     rowList.forEach((row:any) => { 
                         if (i == row.value) {
                             row.duplicateRow = true;
@@ -407,6 +416,7 @@ export default defineComponent({
 
                     isIncorrect = true;
                 } else {
+                    // eslint-disable-next-line
                     rowList.forEach((row:any) => { 
                         if (i == row.value) {
                             row.duplicateRow = false;
@@ -415,6 +425,7 @@ export default defineComponent({
                 }
 
                 if (regionDuplicateCount > 1) {
+                    // eslint-disable-next-line
                     regionList.forEach((region:any) => { 
                         if (i == region.value) {
                             region.duplicateRegion = true;
@@ -423,6 +434,7 @@ export default defineComponent({
 
                     isIncorrect = true;
                 } else {
+                    // eslint-disable-next-line
                     regionList.forEach((region:any) => { 
                         if (i == region.value) {
                             region.duplicateRegion = false;
@@ -530,6 +542,7 @@ export default defineComponent({
                 let isEmpty = false;
 
                 for (let i = 0; i < 9; i ++) {
+                    // eslint-disable-next-line
                     sudokuList.value[i].forEach((column:any) => {
                         if (column.value == 0) {
                             isEmpty = true;
