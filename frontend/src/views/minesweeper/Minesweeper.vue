@@ -21,23 +21,31 @@
         <div :style="[{ 'grid-template-columns': `repeat(${gameSettings.celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${gameSettings.celSize}, 1fr)` }]" class="w-150 h-150 mx-4 grid border-2 border-black">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in mineList" :key="columnIndex">
-                <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open ? 'cursor-pointer hover:opacity-50' : 'bg-yellow-200'" class="flex justify-center items-center text-xl border border-black duration-200">
+                <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open && !row.flag ? 'cursor-pointer hover:opacity-50' : getBackgroundColor(row)" class="flex justify-center items-center text-xl border border-black duration-200">
                     <template v-if="row.open">
-                        <img v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/bomb.png" alt="" class="p-2 bg-white">
+                        <img v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/mine.png" alt="" class="p-2">
                         <p v-else>{{ row.celInfo ? row.celInfo : "" }}</p>
+                    </template>
+                    <template v-else>
+                        <img v-if="row.flag" src="@assets/images/minesweeper/flag.png" alt="">
                     </template>
                 </div>
             </template>
         </div>
 
-        <div class="w-40"></div>
+        <div class="w-40">
+            <div class="w-34 h-10 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
+                <p class="mx-1">Mine Total: </p>
+                <p>{{ mineTotal }}</p>
+            </div>
+        </div>
 
         <custom-footer :version="'1.0'" :lastUpdate="'2022-08-29'"></custom-footer>
     </div>
 </template>
 
 <script lang="ts">
-import { compile, computed, defineComponent, ref } from "vue";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
     name: "Minesweeper",
@@ -48,6 +56,7 @@ export default defineComponent({
             mineCount: 10,
         });
         const isCreateMine = ref(false);
+        const mineTotal = ref(gameSettings.value.mineCount);
 
         function createGame () {
             isCreateMine.value = false;
@@ -59,6 +68,7 @@ export default defineComponent({
                     mineList.value[i].push({
                         celInfo: 0,
                         open: false,
+                        flag: false,
                     });
                 }
             }
@@ -123,8 +133,10 @@ export default defineComponent({
                 createMine(columnIndex, rowIndex);
             }
 
-            if ($event.button === 0) {
+            if ($event.button === 0 && !mineList.value[columnIndex][rowIndex].flag) {
                 openCel(columnIndex, rowIndex);
+            } else if ($event.button === 2 && !mineList.value[columnIndex][rowIndex].open) {
+                setFlag(columnIndex, rowIndex);
             }
         }
 
@@ -150,11 +162,31 @@ export default defineComponent({
             }
         }
 
+        function setFlag (columnIndex:number, rowIndex:number) {
+            if (mineTotal.value <= 0) {
+                return;
+            }
+
+            if (mineList.value[columnIndex][rowIndex].flag) {
+                mineTotal.value++;
+            } else {
+                mineTotal.value--;
+            }
+
+            mineList.value[columnIndex][rowIndex].flag = !mineList.value[columnIndex][rowIndex].flag;
+        }
+
+        function getBackgroundColor (cel:any) {
+            return cel.flag ? "bg-green-200" : cel.celInfo === "mine" ? "bg-red-200" : "bg-yellow-200";
+        }
+
         return {
             mineList,
             gameSettings,
+            mineTotal,
             createGame,
             onMousedownCel,
+            getBackgroundColor,
         };
     },
 });
