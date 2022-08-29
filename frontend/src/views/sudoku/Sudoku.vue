@@ -15,7 +15,7 @@
 
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in sudokuList" :key="columnIndex + 'sudoku'" v-if="createGameFinish">
-                <div @click="onClickCell(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white relative">
+                <div @click="onClickCel(rowIndex + (columnIndex * 9))" v-for="(row, rowIndex) in column" :key="rowIndex" :class="[row.fixed ? 'text-yellow-300 pointer-events-none' : 'cursor-pointer', row.select ? 'bg-yellow-300' : '']" class="w-15 h-15 border border-black rounded flex justify-center items-center bg-white relative">
                     <div class="w-full h-full flex justify-between absolute text-xs text-gray-800">
                         <div class="ml-1 flex flex-col justify-center">
                             <!-- eslint-disable-next-line -->
@@ -50,12 +50,12 @@
 
             <div class="w-34 h-10 my-2 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
                 <p class="mx-1">CHANGE: </p>
-                <p>{{ changeCell }}</p>
+                <p>{{ changeCel }}</p>
             </div>
 
             <div class="w-34 h-10 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
                 <p class="mx-1">INCORRECT: </p>
-                <p>{{ incorrectCell }}</p>
+                <p>{{ incorrectCel }}</p>
             </div>
 
             <div class="w-34 h-58 my-2 flex flex-col border-2 border-black rounded whitespace-nowrap overflow-hidden">
@@ -63,12 +63,12 @@
 
                 <div class="p-1 flex justify-between">
                     <custom-input @focus="focusingInput = true" @blur="focusingInput = false" v-model="memoValue" class="w-14 h-8"></custom-input>
-                    <custom-button @click="addMemo" class="w-14 h-8 bg-yellow-300 text-sm" :disabled="currentCellIndex === -1">ADD</custom-button>
+                    <custom-button @click="addMemo" class="w-14 h-8 bg-yellow-300 text-sm" :disabled="currentCelIndex === -1">ADD</custom-button>
                 </div>
 
-                <div v-if="currentCellIndex !== -1 && memoList[currentCellIndex]" class="p-1 w-full flex flex-col">
+                <div v-if="currentCelIndex !== -1 && memoList[currentCelIndex]" class="p-1 w-full flex flex-col">
                     <!-- eslint-disable-next-line -->
-                    <div v-for="(memo, memoIndex) in memoList[currentCellIndex]" :key="memoIndex" class="w-full flex justify-between">
+                    <div v-for="(memo, memoIndex) in memoList[currentCelIndex]" :key="memoIndex" class="w-full flex justify-between">
                         <p>{{ memo }}</p>
                         <custom-button @click="removeMemo(memoIndex)" class="w-5 h-5 border-black text-xs">X</custom-button>
                     </div>
@@ -95,13 +95,13 @@ export default defineComponent({
         const sudokuList = ref(new Array());
         const tempSudokuList = ref(new Array());
         const createGameFinish = ref(true);
-        const currentCellIndex = ref(-1);
+        const currentCelIndex = ref(-1);
         const currentStatus = ref("Start");
         const isGameClear = ref(true);
         const difficulty = ref(1);
         const playTime = ref(0);
-        const changeCell = ref(0);
-        const incorrectCell = ref(0);
+        const changeCel = ref(0);
+        const incorrectCel = ref(0);
         const computedPlayTime = ref({
             hours: computed(() => {
                 const time = Math.floor(playTime.value / 3600);
@@ -151,12 +151,12 @@ export default defineComponent({
 
         function createBoard () {
             createGameFinish.value = false;
-            currentCellIndex.value = -1;
+            currentCelIndex.value = -1;
             currentStatus.value = "Creating...";
             isGameClear.value = false;
             playTime.value = 0;
-            changeCell.value = 0;
-            incorrectCell.value = 0;
+            changeCel.value = 0;
+            incorrectCel.value = 0;
             memoList.value = new Array();
 
             clearInterval(interval);
@@ -239,7 +239,7 @@ export default defineComponent({
                 await validating();
             }
 
-            removeRandomCell();
+            removeRandomCel();
         }
 
         function validateColumn () {
@@ -371,19 +371,19 @@ export default defineComponent({
             }
         }
 
-        function validateCell (cellIndex:number) {
-            const columnList = sudokuList.value[Math.floor(cellIndex / 9)];
+        function validateCel (celIndex:number) {
+            const columnList = sudokuList.value[Math.floor(celIndex / 9)];
             const rowList = new Array();
             const regionList = new Array();
 
             let isIncorrect = false;
 
             for (let i = 0; i < 9; i++) {
-                rowList.push(sudokuList.value[i][Math.floor(cellIndex % 9)]);
+                rowList.push(sudokuList.value[i][Math.floor(celIndex % 9)]);
             }
 
-            for (let i = Math.floor(Math.floor(cellIndex / 9) / 3) * 3; i < Math.floor(Math.floor(cellIndex / 9) / 3) * 3 + 3; i++) {
-                for (let j = Math.floor(cellIndex % 9 / 3) * 3; j < Math.floor(cellIndex % 9 / 3) * 3 + 3; j++) {
+            for (let i = Math.floor(Math.floor(celIndex / 9) / 3) * 3; i < Math.floor(Math.floor(celIndex / 9) / 3) * 3 + 3; i++) {
+                for (let j = Math.floor(celIndex % 9 / 3) * 3; j < Math.floor(celIndex % 9 / 3) * 3 + 3; j++) {
                     regionList.push(sudokuList.value[i][j]);
                 }
             }
@@ -478,7 +478,7 @@ export default defineComponent({
             }
         }
 
-        function removeRandomCell () {
+        function removeRandomCel () {
             let startColumn = 0;
             let startRow = 0;
 
@@ -522,39 +522,39 @@ export default defineComponent({
             }, 1000);
         }
 
-        function onClickCell (cellIndex:number) {
-            if (currentCellIndex.value !== -1) {
-                sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].select = false;
+        function onClickCel (celIndex:number) {
+            if (currentCelIndex.value !== -1) {
+                sudokuList.value[Math.floor(currentCelIndex.value / 9)][currentCelIndex.value % 9].select = false;
             }
 
-            if (cellIndex !== currentCellIndex.value) {
-                sudokuList.value[Math.floor(cellIndex / 9)][cellIndex % 9].select = true;
-                currentCellIndex.value = cellIndex;
+            if (celIndex !== currentCelIndex.value) {
+                sudokuList.value[Math.floor(celIndex / 9)][celIndex % 9].select = true;
+                currentCelIndex.value = celIndex;
             } else {
-                currentCellIndex.value = -1;
+                currentCelIndex.value = -1;
             }
         }
 
-        function onKeydownCell ($event:KeyboardEvent) {
+        function onKeydownCel ($event:KeyboardEvent) {
             if (focusingInput.value) {
                 return;
             }
 
-            if (currentCellIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
-                if (currentCellIndex.value !== -1 && $event.key === "Backspace") {
-                    sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = 0;
+            if (currentCelIndex.value === -1 || !/^[1-9]+$/.test($event.key)) {
+                if (currentCelIndex.value !== -1 && $event.key === "Backspace") {
+                    sudokuList.value[Math.floor(currentCelIndex.value / 9)][currentCelIndex.value % 9].value = 0;
 
-                    validateCell(currentCellIndex.value) && incorrectCell.value++;
+                    validateCel(currentCelIndex.value) && incorrectCel.value++;
                 }
 
                 return;
             }
 
             setTimeout(() => {
-                sudokuList.value[Math.floor(currentCellIndex.value / 9)][currentCellIndex.value % 9].value = $event.key;
-                changeCell.value++;
+                sudokuList.value[Math.floor(currentCelIndex.value / 9)][currentCelIndex.value % 9].value = $event.key;
+                changeCel.value++;
 
-                validateCell(currentCellIndex.value) && incorrectCell.value++;
+                validateCel(currentCelIndex.value) && incorrectCel.value++;
 
                 let isEmpty = false;
 
@@ -575,7 +575,7 @@ export default defineComponent({
         function validateGameClear () {
             if (validateColumn() && validateRow() && validateRegion()) {
                 isGameClear.value = true;
-                currentCellIndex.value = -1;
+                currentCelIndex.value = -1;
 
                 clearInterval(interval);
                 Object(resultPopup.value).openPopup();
@@ -587,8 +587,8 @@ export default defineComponent({
             let total = 10000;
 
             total -= playTime.value;
-            total -= changeCell.value * 10;
-            total -= incorrectCell.value * 100;
+            total -= changeCel.value * 10;
+            total -= incorrectCel.value * 100;
             total += difficulty.value * 500;
 
             const addScore = () => {
@@ -611,21 +611,21 @@ export default defineComponent({
         }
 
         function addMemo () {
-            if (!memoList.value[currentCellIndex.value]) {
-                memoList.value[currentCellIndex.value] = new Array();
+            if (!memoList.value[currentCelIndex.value]) {
+                memoList.value[currentCelIndex.value] = new Array();
             }
 
-            if (memoList.value[currentCellIndex.value].length < 6) {
-                memoList.value[currentCellIndex.value].push(memoValue.value);
+            if (memoList.value[currentCelIndex.value].length < 6) {
+                memoList.value[currentCelIndex.value].push(memoValue.value);
                 memoValue.value = "";
             }
         }
 
         function removeMemo (removeIndex:number) {
-            memoList.value[currentCellIndex.value].splice(removeIndex, 1);
+            memoList.value[currentCelIndex.value].splice(removeIndex, 1);
         }
 
-        window.addEventListener("keydown", onKeydownCell);
+        window.addEventListener("keydown", onKeydownCel);
 
         return {
             sudokuList,
@@ -635,18 +635,18 @@ export default defineComponent({
             isGameClear,
             difficulty,
             playTime,
-            changeCell,
-            incorrectCell,
+            changeCel,
+            incorrectCel,
             computedPlayTime,
             resultPopup,
             gameScore,
             memoList,
             memoValue,
-            currentCellIndex,
+            currentCelIndex,
             focusingInput,
             createBoard,
-            onClickCell,
-            onKeydownCell,
+            onClickCel,
+            onKeydownCel,
             addMemo,
             removeMemo,
         };
