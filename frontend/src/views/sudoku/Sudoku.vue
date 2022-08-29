@@ -45,7 +45,7 @@
 
         <div class="w-40 mt-2 flex flex-col">
             <div class="w-34 h-10 flex justify-center items-center border-2 border-black rounded">
-                <p class="text-xl">{{ computedPlayTime.hours }}:{{ computedPlayTime.minutes }}:{{ computedPlayTime.seconds }}</p>
+                <custom-timer :time="playTime"></custom-timer>
             </div>
 
             <div class="w-34 h-10 my-2 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { nextTick, watch, computed, ref, defineComponent } from "vue";
+import { nextTick, watch, ref, defineComponent } from "vue";
 
 export default defineComponent({
     setup () {
@@ -102,35 +102,6 @@ export default defineComponent({
         const playTime = ref(0);
         const changeCel = ref(0);
         const incorrectCel = ref(0);
-        const computedPlayTime = ref({
-            hours: computed(() => {
-                const time = Math.floor(playTime.value / 3600);
-
-                if (time > 9) {
-                    return time;
-                } else {
-                    return `0${time}`;
-                }
-            }),
-            minutes: computed(() => {
-                const time = Math.floor(playTime.value / 60 % 60);
-
-                if (time > 9) {
-                    return time;
-                } else {
-                    return `0${time}`;
-                }
-            }),
-            seconds: computed(() => {
-                const time = playTime.value % 60;
-
-                if (time > 9) {
-                    return time;
-                } else {
-                    return `0${time}`;
-                }
-            }),
-        });
         const resultPopup = ref(null);
         const gameScore = ref(0);
         const memoList = ref(new Array());
@@ -637,7 +608,6 @@ export default defineComponent({
             playTime,
             changeCel,
             incorrectCel,
-            computedPlayTime,
             resultPopup,
             gameScore,
             memoList,

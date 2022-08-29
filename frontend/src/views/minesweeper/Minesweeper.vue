@@ -34,7 +34,11 @@
         </div>
 
         <div class="w-40">
-            <div class="w-34 h-10 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
+            <div class="w-34 h-10 flex justify-center items-center border-2 border-black rounded">
+                <custom-timer :time="playTime"></custom-timer>
+            </div>
+
+            <div class="w-34 h-10 my-2 flex items-center border-2 border-black rounded whitespace-nowrap text-sm overflow-hidden">
                 <p class="mx-1">Mine Total: </p>
                 <p>{{ mineTotal }}</p>
             </div>
@@ -57,6 +61,9 @@ export default defineComponent({
         });
         const isCreateMine = ref(false);
         const mineTotal = ref(gameSettings.value.mineCount);
+        const playTime = ref(0);
+
+        let interval = 0;
 
         function createGame () {
             isCreateMine.value = false;
@@ -102,6 +109,10 @@ export default defineComponent({
                     validateNear(i, j);
                 }
             }
+
+            interval = setInterval(() => {
+                playTime.value++;
+            }, 1000);
         }
 
         function validateNear (columnIndex:number, rowIndex:number) {
@@ -184,6 +195,7 @@ export default defineComponent({
             mineList,
             gameSettings,
             mineTotal,
+            playTime,
             createGame,
             onMousedownCel,
             getBackgroundColor,
