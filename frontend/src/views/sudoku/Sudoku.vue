@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full flex justify-center">
+    <div class="w-full pb-10 flex justify-center">
         <div class="mt-2 flex flex-col">
             <custom-button @click="difficulty = 1" :class="[difficulty === 1 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-green-400">EASY</custom-button>
             <custom-button @click="difficulty = 2" :class="[difficulty === 2 ? '' : 'opacity-30', createGameFinish ? '' : 'pointer-events-none']" class="w-34 h-8 bg-blue-400 my-2">NORMAL</custom-button>
