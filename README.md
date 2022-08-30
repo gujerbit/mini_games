@@ -5,4 +5,4 @@ MINI GAMES
 Version 1.1
 
 # [지뢰 찾기](https://mini-games.my-autowired.com/minesweeper)
-Version beta
+Version 1.0

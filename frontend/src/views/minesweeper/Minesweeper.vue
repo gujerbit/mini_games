@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        <custom-footer :version="'1.0'" :lastUpdate="'2022-08-29'"></custom-footer>
+        <custom-footer :version="'1.0'" :lastUpdate="'2022-08-30'"></custom-footer>
     </div>
 </template>
 
