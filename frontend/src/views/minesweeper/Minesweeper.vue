@@ -37,7 +37,7 @@
                     <div class="w-full h-full bg-white opacity-50 absolute"></div>
                     <div class="text-3xl z-10">
                         <p v-show="isDie">GAME OVER...</p>
-                        <p v-show="isGameClear">GAME CLEAR!!!</p>
+                        <p v-show="isGameClear && !isDie">GAME CLEAR!!!</p>
                     </div>
                 </div>
             </transition>
