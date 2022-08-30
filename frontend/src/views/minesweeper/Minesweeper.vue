@@ -24,7 +24,7 @@
                 <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open && !row.flag ? 'cursor-pointer hover:opacity-50' : getBackgroundColor(row)" class="flex justify-center items-center text-xs border border-black duration-200">
                     <template v-if="row.open">
                         <img v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/mine.png" alt="" class="p-2">
-                        <p v-else>{{ row.celInfo ? row.celInfo : "" }}</p>
+                        <p :style="row.celInfo ? `color: ${NUMBERCOLORS[+row.celInfo]}` : ''" style="text-shadow: -1px 0 #000000, 0 1px #000000, 1px 0 #000000, 0 -1px #000000;" v-else>{{ row.celInfo ? row.celInfo : "" }}</p>
                     </template>
                     <template v-else>
                         <img v-if="row.flag" src="@assets/images/minesweeper/flag.png" alt="">
@@ -60,23 +60,51 @@ export default defineComponent({
             mineCount: 10,
         });
         const isCreateMine = ref(false);
-        const flagCount = ref(gameSettings.value.mineCount);
+        const flagCount = ref(0);
         const playTime = ref(0);
         const isDie = ref(false);
         const isGameClear = ref(false);
         const celSize = ref(0);
+        const mineTotal = ref(0);
 
-        const MINETOTAL = gameSettings.value.mineCount;
+        const NUMBERCOLORS = [
+            "#FF3030",
+            "#FF8330",
+            "#FFD630",
+            "#30FF37",
+            "#30FFF8",
+            "#3075FF",
+            "#9B30FF",
+            "#FF30A2",
+        ];
         
         let interval = 0;
 
         async function createGame () {
+            if (gameSettings.value.celSize < 3) {
+                gameSettings.value.celSize = 3;
+            }
+
+            if (gameSettings.value.celSize > 30) {
+                gameSettings.value.celSize = 30;
+            }
+
+            if (gameSettings.value.mineCount < 1) {
+                gameSettings.value.mineCount = 1;
+            }
+
+            if (gameSettings.value.mineCount > gameSettings.value.celSize ** 2) {
+                gameSettings.value.mineCount = gameSettings.value.celSize ** 2 - 1;
+            }
+
             mineList.value = new Array();
             isCreateMine.value = false;
             isDie.value = false;
+            flagCount.value = gameSettings.value.mineCount;
             playTime.value = 0;
             isGameClear.value = false;
             celSize.value = gameSettings.value.celSize;
+            mineTotal.value = gameSettings.value.mineCount;
 
             for (let i = 0; i < gameSettings.value.celSize; i++)    {
                 mineList.value[i] = new Array();
@@ -99,9 +127,9 @@ export default defineComponent({
             }
 
             for (let i = 0; i < gameSettings.value.mineCount; i++) {
-                const randomMineLocate = Math.floor(Math.random() * mineList.value.length ** 2);
-                const columnIndex = Math.floor(randomMineLocate / mineList.value.length);
-                const rowIndex = randomMineLocate % mineList.value.length;
+                const randomMineLocate = Math.floor(Math.random() * celSize.value ** 2);
+                const columnIndex = Math.floor(randomMineLocate / celSize.value);
+                const rowIndex = randomMineLocate % celSize.value;
 
                 if (!mineList.value[columnIndex][rowIndex].celInfo && !(selectColumnIndex === columnIndex && selectRowIndex === rowIndex)) {
                     mineList.value[columnIndex][rowIndex].celInfo = "mine";
@@ -116,8 +144,8 @@ export default defineComponent({
         }
 
         function updateMineInfo () {
-            for (let i = 0; i < mineList.value.length; i++) {
-                for (let j = 0; j < mineList.value.length; j++) {
+            for (let i = 0; i < celSize.value; i++) {
+                for (let j = 0; j < celSize.value; j++) {
                     validateNear(i, j);
                 }
             }
@@ -133,12 +161,12 @@ export default defineComponent({
             }
 
             for (let i = -1; i <= 1; i++) {
-                if (columnIndex + i < 0 || columnIndex + i > mineList.value.length - 1) {
+                if (columnIndex + i < 0 || columnIndex + i > celSize.value - 1) {
                     continue;
                 }
 
                 for (let j = -1; j <= 1; j++) {
-                    if (rowIndex + j < 0 || rowIndex + j > mineList.value.length - 1 || mineList.value[columnIndex + i][rowIndex + j].celInfo !== "mine") {
+                    if (rowIndex + j < 0 || rowIndex + j > celSize.value - 1 || mineList.value[columnIndex + i][rowIndex + j].celInfo !== "mine") {
                         continue;
                     }
 
@@ -159,6 +187,7 @@ export default defineComponent({
 
             if ($event.button === 0 && !mineList.value[columnIndex][rowIndex].flag) {
                 openCel(columnIndex, rowIndex);
+                validateGameClear();
             } else if ($event.button === 2 && !mineList.value[columnIndex][rowIndex].open) {
                 setFlag(columnIndex, rowIndex);
             }
@@ -174,25 +203,24 @@ export default defineComponent({
             if (mineList.value[columnIndex][rowIndex].celInfo) {
                 if (mineList.value[columnIndex][rowIndex].celInfo === "mine") {
                     openMines();
-                    clearInterval(interval);
                 }
 
                 return;
             }
 
             for (let i = -1; i <= 1; i++) {
-                if (i !== 0 && columnIndex + i >= 0 && columnIndex + i <= mineList.value.length - 1) {
+                if (i !== 0 && columnIndex + i >= 0 && columnIndex + i <= celSize.value - 1) {
                     openCel(columnIndex + i, rowIndex);
                 }
 
-                if (i !== 0 && rowIndex + i >= 0 && rowIndex + i <= mineList.value.length - 1) {
+                if (i !== 0 && rowIndex + i >= 0 && rowIndex + i <= celSize.value - 1) {
                     openCel(columnIndex, rowIndex + i);
                 }
             }
         }
 
         function setFlag (columnIndex:number, rowIndex:number) {
-            if (flagCount.value <= 0) {
+            if (flagCount.value <= 0 && !mineList.value[columnIndex][rowIndex].flag) {
                 return;
             }
 
@@ -207,34 +235,38 @@ export default defineComponent({
 
         // eslint-disable-next-line
         function getBackgroundColor (cel:any) {
-            return cel.flag ? "bg-green-200" : cel.celInfo === "mine" ? "bg-red-200" : "bg-yellow-200";
+            return cel.flag ? "bg-green-200" : cel.celInfo === "mine" ? "bg-red-200" : "bg-gray-300";
         }
 
         function openMines () {
             isDie.value = true;
 
-            for (let i = 0; i < mineList.value.length; i++) {
-                for (let j = 0; j < mineList.value.length; j++) {
+            for (let i = 0; i < celSize.value; i++) {
+                for (let j = 0; j < celSize.value; j++) {
                     if (mineList.value[i][j].celInfo === "mine" && !mineList.value[i][j].flag) {
                         mineList.value[i][j].open = true;
                     }
                 }
             }
+
+            clearInterval(interval);
         }
 
         function validateGameClear () {
-            let validateMineTotal = 0;
+            let isOpen = 0;
 
-            for (let i = 0; i < mineList.value.length; i++) {
-                for (let j = 0; j < mineList.value.length; j++) {
-                    if (mineList.value[i][j].celInfo === "mine" && !mineList.value[i][j].open) {
-                        validateMineTotal++;
+            for (let i = 0; i < celSize.value; i++) {
+                for (let j = 0; j < celSize.value; j++) {
+                    if (mineList.value[i][j].open) {
+                        isOpen++;
                     }
                 }
             }
-
-            if (validateMineTotal === MINETOTAL) {
+            
+            if (celSize.value ** 2 - isOpen == mineTotal.value) {
                 isGameClear.value = true;
+
+                clearInterval(interval);
             }
         }
 
@@ -246,6 +278,7 @@ export default defineComponent({
             isDie,
             isGameClear,
             celSize,
+            NUMBERCOLORS,
             createGame,
             onMousedownCel,
             getBackgroundColor,
