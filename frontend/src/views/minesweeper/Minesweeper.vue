@@ -18,10 +18,10 @@
             <custom-button @click="createGame" class="w-34 h-8 my-2 bg-yellow-400" :disabled="false">{{ "Start" }}</custom-button>
         </div>
 
-        <div :style="[{ 'grid-template-columns': `repeat(${celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${celSize}, 1fr)` }]" :class="(isDie || isGameClear) ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 grid border-2 border-black">
+        <div :style="[{ 'grid-template-columns': `repeat(${celSize}, 1fr)` }, { 'grid-template-rows': `repeat(${celSize}, 1fr)` }]" :class="(isDie || isGameClear) ? 'pointer-events-none' : ''" class="w-150 h-150 mx-4 grid border-2 border-black relative">
             <!-- eslint-disable-next-line -->
             <template v-for="(column, columnIndex) in mineList" :key="columnIndex">
-                <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 10px 1px #000000" :class="!row.open && !row.flag ? 'cursor-pointer hover:opacity-50' : getBackgroundColor(row)" class="flex justify-center items-center text-xs border border-black duration-200">
+                <div @mousedown="onMousedownCel($event, columnIndex, rowIndex)" v-for="(row, rowIndex) in column" :key="rowIndex" style="box-shadow: inset 0px 0px 5px 1px #000000" :class="!row.open && !row.flag ? 'cursor-pointer hover:opacity-50' : getBackgroundColor(row)" class="flex justify-center items-center text-xs border border-black duration-200">
                     <template v-if="row.open">
                         <img v-if="row.celInfo === 'mine'" src="@assets/images/minesweeper/mine.png" alt="" class="p-2">
                         <p :style="row.celInfo ? `color: ${NUMBERCOLORS[+row.celInfo]}` : ''" style="text-shadow: -1px 0 #000000, 0 1px #000000, 1px 0 #000000, 0 -1px #000000;" v-else>{{ row.celInfo ? row.celInfo : "" }}</p>
@@ -31,6 +31,16 @@
                     </template>
                 </div>
             </template>
+
+            <transition name="fade" mode="">
+                <div v-if="isDie || isGameClear" class="w-full h-full flex justify-center items-center absolute">
+                    <div class="w-full h-full bg-white opacity-50 absolute"></div>
+                    <div class="text-3xl z-10">
+                        <p v-show="isDie">GAME OVER...</p>
+                        <p v-show="isGameClear">GAME CLEAR!!!</p>
+                    </div>
+                </div>
+            </transition>
         </div>
 
         <div class="w-40">
@@ -239,8 +249,6 @@ export default defineComponent({
         }
 
         function openMines () {
-            isDie.value = true;
-
             for (let i = 0; i < celSize.value; i++) {
                 for (let j = 0; j < celSize.value; j++) {
                     if (mineList.value[i][j].celInfo === "mine" && !mineList.value[i][j].flag) {
@@ -248,6 +256,8 @@ export default defineComponent({
                     }
                 }
             }
+
+            isDie.value = true;
 
             clearInterval(interval);
         }
