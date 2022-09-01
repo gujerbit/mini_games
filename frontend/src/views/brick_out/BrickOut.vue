@@ -7,9 +7,9 @@
         </div>
 
         <canvas id="brick-out-canvas" width="550" height="550" class="bg-gray-100"></canvas>
-        <div @click="mountedFunc.gameStart" v-if="isGameOver || !isGameStart" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute">
+        <div @click="mountedFunc.gameStart" v-if="isGameOver || !isGameStart" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute cursor-pointer">
             <div class="w-full h-full bg-white opacity-50 absolute"></div>
-            <p v-if="isGameOver" class="text-3xl z-10">GAME OVER!!!</p>
+            <p v-if="isGameOver" class="my-4 text-3xl z-10">GAME OVER!!!</p>
             <p class="text-3xl z-10">Press to Start</p>
         </div>
 
@@ -81,8 +81,8 @@ export default defineComponent({
                 // ball info
                 ballX = Math.floor(canvas.width / 2);
                 ballY = canvas.height - 30;
-                ballXSpeed = 1;
-                ballYSpeed = -1;
+                ballXSpeed = 3;
+                ballYSpeed = -3;
                 ballRadius = 10;
                 ballPower = 1;
 
@@ -90,7 +90,7 @@ export default defineComponent({
                 paddleX = Math.floor(canvas.width / 2);
                 paddleY = canvas.height - 10;
                 paddleSpeed = 7;
-                paddleWidth = 70;
+                paddleWidth = 170;
                 paddleHeight = 10;
                 leftPressed = false;
                 rightPressed = false;
@@ -200,6 +200,10 @@ export default defineComponent({
                     }
                 }
             }
+
+            function upgradeBricks () {
+                brickLife++;
+            }
             
             function collisionDetectionBricks () {
                 for (let i = 0; i < brickMaxColumnCount; i++) {
@@ -212,7 +216,8 @@ export default defineComponent({
                             score.value++;
 
                             if (score.value === brickLifeTotal) {
-                                //
+                                upgradeBricks();
+                                updateBricks();
                             }
                         }
                     }
