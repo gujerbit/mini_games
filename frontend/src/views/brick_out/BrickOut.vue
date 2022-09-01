@@ -1,6 +1,19 @@
 <template>
     <div class="w-full mt-2 pb-10 flex justify-center">
+        <div class="w-30 mr-2 flex flex-col items-end">
+            <div class="w-full h-10 flex items-center border-2 border-black rounded whitespace-nowrap overflow-hidden">
+                <p class="ml-2 text-sm"> {{ `SCORE: ${score}` }}</p>
+            </div>
+        </div>
+
         <canvas id="brick-out-canvas" width="550" height="550" class="bg-gray-100"></canvas>
+        <div v-if="isGameOver" class="w-137.5 h-137.5 flex justify-center items-center absolute">
+            <div class="w-full h-full bg-white opacity-50 absolute"></div>
+            <p class="text-3xl z-10">GAME OVER!!!</p>
+        </div>
+
+        <div class="w-30 ml-2">
+        </div>
 
         <custom-footer :version="'beta'" :lastUpdate="'2022-09-01'"></custom-footer>
     </div>
@@ -14,7 +27,9 @@ export default defineComponent({
     setup () {
         const mountedFunc:any = ref({});
         const isGameOver = ref(false);
-
+        const isGameClear = ref(false);
+        const score = ref(0);
+        
         let animationId = 0;
 
         onMounted(() => {
@@ -27,6 +42,7 @@ export default defineComponent({
             let ballXSpeed = 1;
             let ballYSpeed = -1;
             let ballRadius = 10;
+            let ballPower = 1;
 
             // paddle info
             let paddleX = Math.floor(canvas.width / 2);
@@ -36,15 +52,47 @@ export default defineComponent({
             let paddleHeight = 10;
             let leftPressed = false;
             let rightPressed = false;
+
+            // brick info
+            const brickList:Array<Array<any>> = [];
+            let brickWidth = 100;
+            let brickHeight = 30;
+            let brickMaxColumnCount = 5;
+            let brickMaxRowCount = 3;
+            let brickOffsetTop = 10;
+            let brickOffsetLeft = 10;
+            let brickPaddingX = 5;
+            let brickPaddingY = 5;
+            let brickLife = 1;
             
             mountedFunc.value.gameStart = () => {
+                for (let i = 0; i < brickMaxColumnCount; i++) {
+                    brickList[i] = [];
+
+                    for (let j = 0; j < brickMaxRowCount; j++) {
+                        brickList[i][j] = {
+                            brickX: 0,
+                            brickY: 0,
+                            brickLife: brickLife,
+                        };
+                    }
+                }
+
+                renderGame();
+            };
+
+            function renderGame () {
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
+                renderBricks();
                 renderBall();
                 renderPaddle();
+                collisionDetectionBricks();
 
-                animationId = requestAnimationFrame(mountedFunc.value.gameStart);
-            };
+                if (!isGameOver.value) {
+                    animationId = requestAnimationFrame(renderGame);
+                }
+            }
 
             function renderBall () {
                 if (ballX + ballXSpeed > canvas.width - ballRadius || ballX + ballXSpeed < ballRadius) {
@@ -54,9 +102,9 @@ export default defineComponent({
                 if (ballY + ballYSpeed < ballRadius) {
                     ballYSpeed = -ballYSpeed;
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
-                    // isGameOver.value = true;
+                    isGameOver.value = true;
 
-                    // cancelAnimationFrame(animationId);
+                    cancelAnimationFrame(animationId);
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
                     ballYSpeed = -ballYSpeed;
                 }
@@ -82,6 +130,44 @@ export default defineComponent({
                 context.fillStyle = "#000000";
                 context.fillRect(paddleX, paddleY, paddleWidth, paddleHeight);
                 context.closePath();
+            }
+
+            function renderBricks () {
+                brickPaddingX = Math.floor(Math.floor((canvas.width - brickWidth * brickMaxColumnCount) / brickMaxColumnCount) / 2);
+                brickOffsetLeft = Math.floor((canvas.width - ((brickWidth + brickPaddingX) * brickMaxColumnCount)) / 2) + Math.floor(brickPaddingX / 2);
+
+                for (let i = 0; i < brickMaxColumnCount; i++) {
+                    for (let j = 0; j < brickMaxRowCount; j++) {
+                        const brick = brickList[i][j];
+
+                        if (brick.brickLife > 0) {
+                            const brickX = (brickWidth + brickPaddingX) * i + brickOffsetLeft;
+                            const brickY = (brickHeight + brickPaddingY) * j + brickOffsetTop;
+
+                            brick.brickX = brickX;
+                            brick.brickY = brickY;
+
+                            context.beginPath();
+                            context.fillStyle = "#0F94CD";
+                            context.fillRect(brickX, brickY, brickWidth, brickHeight);
+                            context.closePath();
+                        }
+                    }
+                }
+            }
+            
+            function collisionDetectionBricks () {
+                for (let i = 0; i < brickMaxColumnCount; i++) {
+                    for (let j = 0; j < brickMaxRowCount; j++) {
+                        const brick = brickList[i][j];
+
+                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0) {
+                            brick.brickLife -= ballPower;
+                            ballYSpeed = -ballYSpeed;
+                            score.value++;
+                        }
+                    }
+                }
             }
 
             function onKeyDown (e:KeyboardEvent) {
@@ -121,6 +207,9 @@ export default defineComponent({
 
         return {
             mountedFunc,
+            isGameOver,
+            isGameClear,
+            score,
         }
     },
 });
