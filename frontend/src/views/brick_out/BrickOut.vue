@@ -1,6 +1,7 @@
 <template>
     <div class="w-full mt-2 pb-10 flex justify-center">
         <canvas id="brick-out-canvas" width="550" height="550" class="bg-gray-100"></canvas>
+
         <custom-footer :version="'beta'" :lastUpdate="'2022-09-01'"></custom-footer>
     </div>
 </template>
@@ -13,6 +14,8 @@ export default defineComponent({
     setup () {
         const mountedFunc:any = ref({});
         const isGameOver = ref(false);
+
+        let animationId = 0;
 
         onMounted(() => {
             const canvas = document.getElementById("brick-out-canvas") as HTMLCanvasElement;
@@ -40,7 +43,7 @@ export default defineComponent({
                 renderBall();
                 renderPaddle();
 
-                requestAnimationFrame(mountedFunc.value.gameStart);
+                animationId = requestAnimationFrame(mountedFunc.value.gameStart);
             };
 
             function renderBall () {
@@ -51,8 +54,10 @@ export default defineComponent({
                 if (ballY + ballYSpeed < ballRadius) {
                     ballYSpeed = -ballYSpeed;
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
-                    isGameOver.value = true;
-                } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth) {
+                    // isGameOver.value = true;
+
+                    // cancelAnimationFrame(animationId);
+                } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
                     ballYSpeed = -ballYSpeed;
                 }
 
@@ -98,7 +103,7 @@ export default defineComponent({
             function onMouseMove (e:MouseEvent) {
                 const mouseX = e.clientX - canvas.offsetLeft;
 
-                paddleX = mouseX;
+                paddleX = mouseX - Math.floor(paddleWidth / 2);
 
                 if (paddleX < 0) {
                     paddleX = 0;
