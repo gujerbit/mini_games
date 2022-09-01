@@ -54,7 +54,7 @@
             </div>
         </div>
 
-        <custom-footer :version="'1.0'" :lastUpdate="'2022-08-30'"></custom-footer>
+        <custom-footer :version="'1.0'" :lastUpdate="'2022-09-01'"></custom-footer>
     </div>
 </template>
 
@@ -103,7 +103,7 @@ export default defineComponent({
                 gameSettings.value.mineCount = 1;
             }
 
-            if (gameSettings.value.mineCount > gameSettings.value.celSize ** 2) {
+            if (gameSettings.value.mineCount >= gameSettings.value.celSize ** 2) {
                 gameSettings.value.mineCount = gameSettings.value.celSize ** 2 - 1;
             }
 

@@ -7,6 +7,10 @@
         <router-link to="/minesweeper">
             MINESWEEPER
         </router-link>
+
+        <router-link to="/brick-out">
+            BRICK OUT
+        </router-link>
     </div>
 </template>
 
