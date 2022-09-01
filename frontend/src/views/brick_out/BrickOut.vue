@@ -15,7 +15,7 @@
         <div class="w-30 ml-2">
         </div>
 
-        <custom-footer :version="'beta'" :lastUpdate="'2022-09-01'"></custom-footer>
+        <custom-footer :version="'1.0'" :lastUpdate="'2022-09-01'"></custom-footer>
     </div>
 </template>
 
