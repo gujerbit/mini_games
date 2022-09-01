@@ -7,9 +7,10 @@
         </div>
 
         <canvas id="brick-out-canvas" width="550" height="550" class="bg-gray-100"></canvas>
-        <div v-if="isGameOver" class="w-137.5 h-137.5 flex justify-center items-center absolute">
+        <div @click="mountedFunc.gameStart" v-if="isGameOver || !isGameStart" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute">
             <div class="w-full h-full bg-white opacity-50 absolute"></div>
-            <p class="text-3xl z-10">GAME OVER!!!</p>
+            <p v-if="isGameOver" class="text-3xl z-10">GAME OVER!!!</p>
+            <p class="text-3xl z-10">Press to Start</p>
         </div>
 
         <div class="w-30 ml-2">
@@ -27,7 +28,7 @@ export default defineComponent({
     setup () {
         const mountedFunc:any = ref({});
         const isGameOver = ref(false);
-        const isGameClear = ref(false);
+        const isGameStart = ref(false);
         const score = ref(0);
         
         let animationId = 0;
@@ -64,8 +65,50 @@ export default defineComponent({
             let brickPaddingX = 5;
             let brickPaddingY = 5;
             let brickLife = 1;
+            let brickLifeTotal = 0;
             
             mountedFunc.value.gameStart = () => {
+                updateGameInfo();
+                updateBricks();
+                renderGame();
+            };
+
+            function updateGameInfo () {
+                isGameOver.value = false;
+                isGameStart.value = true;
+                score.value = 0;
+
+                // ball info
+                ballX = Math.floor(canvas.width / 2);
+                ballY = canvas.height - 30;
+                ballXSpeed = 1;
+                ballYSpeed = -1;
+                ballRadius = 10;
+                ballPower = 1;
+
+                // paddle info
+                paddleX = Math.floor(canvas.width / 2);
+                paddleY = canvas.height - 10;
+                paddleSpeed = 7;
+                paddleWidth = 70;
+                paddleHeight = 10;
+                leftPressed = false;
+                rightPressed = false;
+
+                // brick info
+                brickWidth = 100;
+                brickHeight = 30;
+                brickMaxColumnCount = 5;
+                brickMaxRowCount = 3;
+                brickOffsetTop = 10;
+                brickOffsetLeft = 10;
+                brickPaddingX = 5;
+                brickPaddingY = 5;
+                brickLife = 1;
+                brickLifeTotal = 0;
+            }
+
+            function updateBricks () {
                 for (let i = 0; i < brickMaxColumnCount; i++) {
                     brickList[i] = [];
 
@@ -75,11 +118,11 @@ export default defineComponent({
                             brickY: 0,
                             brickLife: brickLife,
                         };
+
+                        brickLifeTotal += brickLife;
                     }
                 }
-
-                renderGame();
-            };
+            }
 
             function renderGame () {
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -103,6 +146,7 @@ export default defineComponent({
                     ballYSpeed = -ballYSpeed;
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
                     isGameOver.value = true;
+                    isGameStart.value = false;
 
                     cancelAnimationFrame(animationId);
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
@@ -133,6 +177,7 @@ export default defineComponent({
             }
 
             function renderBricks () {
+                brickWidth = Math.floor(canvas.width / brickMaxColumnCount) - 10;
                 brickPaddingX = Math.floor(Math.floor((canvas.width - brickWidth * brickMaxColumnCount) / brickMaxColumnCount) / 2);
                 brickOffsetLeft = Math.floor((canvas.width - ((brickWidth + brickPaddingX) * brickMaxColumnCount)) / 2) + Math.floor(brickPaddingX / 2);
 
@@ -165,6 +210,10 @@ export default defineComponent({
                             brick.brickLife -= ballPower;
                             ballYSpeed = -ballYSpeed;
                             score.value++;
+
+                            if (score.value === brickLifeTotal) {
+                                //
+                            }
                         }
                     }
                 }
@@ -201,14 +250,12 @@ export default defineComponent({
             document.addEventListener("keydown", onKeyDown);
             document.addEventListener("keyup", onKeyUp);
             document.addEventListener("mousemove", onMouseMove);
-
-            mountedFunc.value.gameStart();
         });
 
         return {
             mountedFunc,
             isGameOver,
-            isGameClear,
+            isGameStart,
             score,
         }
     },
