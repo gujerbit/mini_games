@@ -12,6 +12,7 @@ export default defineComponent({
     name: "BrickOut",
     setup () {
         const mountedFunc:any = ref({});
+        const isGameOver = ref(false);
 
         onMounted(() => {
             const canvas = document.getElementById("brick-out-canvas") as HTMLCanvasElement;
@@ -50,8 +51,8 @@ export default defineComponent({
                 if (ballY + ballYSpeed < ballRadius) {
                     ballYSpeed = -ballYSpeed;
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
-                    //
-                } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX - Math.floor(paddleWidth / 2) && ballX < paddleX + Math.floor(paddleWidth / 2)) {
+                    isGameOver.value = true;
+                } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth) {
                     ballYSpeed = -ballYSpeed;
                 }
 
@@ -74,7 +75,7 @@ export default defineComponent({
 
                 context.beginPath();
                 context.fillStyle = "#000000";
-                context.fillRect(paddleX - Math.floor(paddleWidth / 2), paddleY, paddleWidth, paddleHeight);
+                context.fillRect(paddleX, paddleY, paddleWidth, paddleHeight);
                 context.closePath();
             }
 
@@ -97,8 +98,12 @@ export default defineComponent({
             function onMouseMove (e:MouseEvent) {
                 const mouseX = e.clientX - canvas.offsetLeft;
 
-                if (mouseX > 0 && mouseX < canvas.width) {
-                    paddleX = mouseX - Math.floor(paddleWidth / 2);
+                paddleX = mouseX;
+
+                if (paddleX < 0) {
+                    paddleX = 0;
+                } else if (paddleX > canvas.width - paddleWidth) {
+                    paddleX = canvas.width - paddleWidth;
                 }
             }
 
