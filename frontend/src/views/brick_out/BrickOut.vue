@@ -1,19 +1,45 @@
 <template>
     <div class="w-full mt-2 pb-10 flex justify-center">
-        <div class="w-30 mr-2 flex flex-col items-end">
+        <div class="w-50 mr-2 flex flex-col items-end">
             <div class="w-full h-10 flex items-center border-2 border-black rounded whitespace-nowrap overflow-hidden">
                 <p class="ml-2 text-sm"> {{ `SCORE: ${score}` }}</p>
             </div>
         </div>
 
-        <canvas id="brick-out-canvas" width="550" height="550" class="bg-gray-100"></canvas>
-        <div @click="mountedFunc.gameStart" v-if="isGameOver || !isGameStart" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute cursor-pointer">
+        <canvas id="brick-out-canvas" width="551" height="551" class="bg-gray-100"></canvas>
+
+        <div v-if="isGameOver || isPause" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute">
             <div class="w-full h-full bg-white opacity-50 absolute"></div>
-            <p v-if="isGameOver" class="my-4 text-3xl z-10">GAME OVER!!!</p>
-            <p class="text-3xl z-10">Press to Start</p>
+            <div @click="mountedFunc.gameStart" v-if="isGameOver" class="w-full h-full flex justify-center items-center z-10 cursor-pointer">
+                <img class="w-50 h-50" src="@assets/images/brick_out/play_button.png" alt="">
+            </div>
+            <img class="w-50 h-50 z-10" v-if="!isGameOver && isPause" src="@assets/images/brick_out/pause_button.png" alt="">
         </div>
 
-        <div class="w-30 ml-2">
+        <div v-if="isPlayerUpgrade" class="w-137.5 h-137.5 flex flex-col justify-center items-center absolute">
+            <div class="w-full h-full bg-white opacity-50 absolute"></div>
+            
+            <div class="w-full h-full flex justify-center items-center z-10 relative">
+                <p class="absolute top-20 text-3xl">Choose the ability</p>
+                <div @click="mountedFunc.upgradePlayer(upgrade.value)" v-for="(upgrade, upgradeIndex) in playerUpgradeList" :key="upgradeIndex" class="w-40 h-40 mx-2 border-2 border-black rounded cursor-pointer hover:opacity-100 opacity-50 bg-white text-center duration-200">
+                    <img class="py-3" :src="require(`@assets/images/brick_out/${upgrade.img}.png`)" alt="">
+                    <p class="text-sm font-bold">{{ upgrade.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-50 ml-2">
+            <div class="w-full h-65 p-2 flex flex-col border-2 border-black rounded text-xs whitespace-nowrap">
+                <p class="pb-2 text-center text-xl">Player Info</p>
+                <p class="py-1">{{ `speed: ${playerInfo.ballSpeed ?? ""}` }}</p>
+                <p class="py-1">{{ `power: ${playerInfo.ballPower ?? ""}` }}</p>
+                <p class="py-1">{{ `critical chance: ${playerInfo.ballCriticalChance ?? ""}` }}</p>
+                <p class="py-1">{{ `critical power: ${playerInfo.ballCriticalPower ?? ""}` }}</p>
+                <p class="py-1">{{ `penetration chance: ${playerInfo.ballPenetrationChance ?? ""}` }}</p>
+                <p class="py-1">{{ `multiple attack chance: ${playerInfo.ballMultipleAttackChance ?? ""}` }}</p>
+                <p class="py-1">{{ `ball size: ${playerInfo.ballSize ?? ""}` }}</p>
+                <p class="py-1">{{ `paddle width: ${playerInfo.paddleWidth ?? ""}` }}</p>
+            </div>
         </div>
 
         <custom-footer :version="'1.1'" :lastUpdate="'2022-09-02'"></custom-footer>
@@ -21,17 +47,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 
 export default defineComponent({
     name: "BrickOut",
     setup () {
         const mountedFunc:any = ref({});
-        const isGameOver = ref(false);
-        const isGameStart = ref(false);
+        const isGameOver = ref(true);
         const score = ref(0);
-        
-        let animationId = 0;
+        const isPlayerUpgrade = ref(false);
+        const playerUpgradeList:any = ref([]);
+        const playerInfo:any = ref({});
+        const isPause = ref(false);
 
         onMounted(() => {
             const canvas = document.getElementById("brick-out-canvas") as HTMLCanvasElement;
@@ -39,12 +66,15 @@ export default defineComponent({
 
             // ball info
             let ballX = Math.floor(canvas.width / 2);
-            let ballY = canvas.height - 40;
+            let ballY = canvas.height - 30;
             let ballXSpeed = 1;
             let ballYSpeed = -1;
             let ballRadius = 10;
             let ballPower = 1;
-            let beforeYStatus = ballYSpeed;
+            let ballCriticalChance = 0;
+            let ballCriticalPower = 2;
+            let ballPenetrationChance = 0;
+            let ballMultipleAttackChance = 0;
 
             // paddle info
             let paddleX = Math.floor(canvas.width / 2);
@@ -108,16 +138,55 @@ export default defineComponent({
             let brickLifeTotal = 0;
 
             // etc
-            let initalBeforeYStatus = false;
+            const abilityList = [
+                {
+                    name: "Ball Attack Power Up",
+                    value: 0,
+                    img: "ball_attack_up",
+                },
+                {
+                    name: "Ball Speed Up",
+                    value: 1,
+                    img: "ball_speed_up",
+                },
+                {
+                    name: "Paddle Width Up",
+                    value: 2,
+                    img: "paddle_width_up",
+                },
+                {
+                    name: "Ball Speed Down",
+                    value: 3,
+                    img: "ball_speed_down",
+                },
+                {
+                    name: "Ball Size Up",
+                    value: 4,
+                    img: "ball_size_up",
+                },
+                {
+                    name: "Ball Critical Chance Up",
+                    value: 5,
+                    img: "ball_critical_chance_up",
+                },
+                {
+                    name: "Ball Critical Power Up",
+                    value: 6,
+                    img: "ball_critical_power_up",
+                },
+                {
+                    name: "Ball Penetration Chance Up",
+                    value: 7,
+                    img: "ball_penetration_chance_up",
+                },
+                {
+                    name: "Ball Multiple Attack Chance Up",
+                    value: 8,
+                    img: "ball_multiple_attack_chance_up",
+                },
+            ];
 
-            watch(score, () => {
-                beforeYStatus = ballYSpeed;
-
-                if (!initalBeforeYStatus) {
-                    beforeYStatus = -ballYSpeed;
-                    initalBeforeYStatus = true;
-                }
-            });
+            let animationId = 0;
             
             mountedFunc.value.gameStart = () => {
                 updateGameInfo();
@@ -129,10 +198,14 @@ export default defineComponent({
                 // ball info
                 ballX = Math.floor(canvas.width / 2);
                 ballY = canvas.height - 30;
-                ballXSpeed = 1.5;
-                ballYSpeed = -1.5;
+                ballXSpeed = 7.5;
+                ballYSpeed = -7.5;
                 ballRadius = 10;
                 ballPower = 1;
+                ballCriticalChance = 0;
+                ballCriticalPower = 2;
+                ballPenetrationChance = 0;
+                ballMultipleAttackChance = 0;
 
                 // paddle info
                 paddleX = Math.floor(canvas.width / 2);
@@ -152,12 +225,24 @@ export default defineComponent({
                 brickOffsetLeft = 10;
                 brickPaddingX = 5;
                 brickPaddingY = 5;
-                brickLife = 2;
+                brickLife = 1;
                 brickLifeTotal = 0;
 
                 isGameOver.value = false;
-                isGameStart.value = true;
                 score.value = 0;
+
+                updatePlayerInfo();
+            }
+
+            function updatePlayerInfo () {
+                playerInfo.value.ballSpeed = Math.abs(ballXSpeed);
+                playerInfo.value.ballSize = ballRadius;
+                playerInfo.value.ballPower = ballPower;
+                playerInfo.value.ballCriticalChance = ballCriticalChance;
+                playerInfo.value.ballCriticalPower = ballCriticalPower;
+                playerInfo.value.ballPenetrationChance = ballPenetrationChance;
+                playerInfo.value.ballMultipleAttackChance = ballMultipleAttackChance;
+                playerInfo.value.paddleWidth = paddleWidth;
             }
 
             function updateBricks () {
@@ -169,6 +254,7 @@ export default defineComponent({
                             brickX: 0,
                             brickY: 0,
                             brickLife: brickLife,
+                            isCollision: false,
                         };
 
                         brickLifeTotal += brickLife;
@@ -184,7 +270,7 @@ export default defineComponent({
                 renderPaddle();
                 collisionDetectionBricks();
 
-                if (!isGameOver.value) {
+                if (!isGameOver.value && !isPlayerUpgrade.value && !isPause.value) {
                     animationId = requestAnimationFrame(renderGame);
                 }
             }
@@ -198,8 +284,6 @@ export default defineComponent({
                     ballYSpeed = -ballYSpeed;
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
                     isGameOver.value = true;
-                    isGameStart.value = false;
-                    initalBeforeYStatus = false;
 
                     cancelAnimationFrame(animationId);
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
@@ -258,25 +342,135 @@ export default defineComponent({
             }
 
             function upgradeBricks () {
-                ballX = Math.floor(canvas.width / 2);
-                ballY = canvas.height - 30;
                 brickLife++;
             }
+
+            mountedFunc.value.upgradePlayer = (upgradeIndex:number) => {
+                switch (upgradeIndex) {
+                    case 0:
+                        ballPower += Math.floor(Math.random() * 3) + 1;
+
+                        break;
+                    case 1:
+                        if (Math.abs(ballXSpeed) < 9.9) {
+                            ballXSpeed += (Math.floor(Math.random() * 3) + 1) * 0.1 * (ballXSpeed > 0 ? 1 : -1);
+                            ballYSpeed += (Math.floor(Math.random() * 3) + 1) * 0.1 * (ballYSpeed > 0 ? 1 : -1);
+                        }
+
+                        if (Math.abs(ballXSpeed) > 9.9) {
+                            ballXSpeed = ballXSpeed > 0 ? 9.9 : -9.9;
+                            ballYSpeed = ballYSpeed > 0 ? 9.9 : -9.9;
+                        }
+                        
+                        break;
+                    case 2:
+                        if (paddleWidth < 250) {
+                            paddleWidth += Math.floor(Math.random() * 10) + 1;
+                        }
+
+                        if (paddleWidth > 250) {
+                            paddleWidth = 250;
+                        }
+                        
+                        break;
+                    case 3:
+                        if (Math.abs(ballXSpeed) > 1.5) {
+                            ballXSpeed += (Math.floor(Math.random() * 3) + 1) * 0.1 * (ballXSpeed < 0 ? 1 : -1);
+                            ballYSpeed += (Math.floor(Math.random() * 3) + 1) * 0.1 * (ballYSpeed < 0 ? 1 : -1);
+                        }
+
+                        if (Math.abs(ballXSpeed) < 1.5) {
+                            ballXSpeed = ballXSpeed > 0 ? 1.5 : -1.5;
+                            ballYSpeed = ballYSpeed > 0 ? 1.5 : -1.5;
+                        }
+
+                        break;
+                    case 4:
+                        if (ballRadius < 20) {
+                            ballRadius += (Math.floor(Math.random() * 5) + 1) * 0.1;
+                        }
+
+                        if (ballRadius > 20) {
+                            ballRadius = 20;
+                        }
+
+                        break;
+                    case 5:
+                        if (ballCriticalChance < 0.5) {
+                            ballCriticalChance += (Math.floor(Math.random() * 5) + 1) * 0.01;
+                        }
+
+                        if (ballCriticalChance > 0.5) {
+                            ballCriticalChance = 1;
+                        }
+
+                        break;
+                    case 6:
+                        ballCriticalPower += (Math.floor(Math.random() * 3) + 1) * 0.1;
+
+                        break;
+                    case 7:
+                        if (ballPenetrationChance < 0.5) {
+                            ballPenetrationChance += (Math.floor(Math.random() * 5) + 1) * 0.01;
+                        }
+
+                        if (ballPenetrationChance > 0.5) {
+                            ballPenetrationChance = 0.5;
+                        }
+
+                        break;
+                    case 8:
+                        if (ballMultipleAttackChance < 0.5) {
+                            ballMultipleAttackChance += (Math.floor(Math.random() * 5) + 1) * 0.01;
+                        }
+
+                        if (ballMultipleAttackChance > 0.5) {
+                            ballMultipleAttackChance = 0.5;
+                        }
+
+                        break;
+                }
+
+                isPlayerUpgrade.value = false;
+                ballX = Math.floor(canvas.width / 2);
+                ballY = canvas.height - 30;
+
+                updatePlayerInfo();
+                renderGame();
+            };
             
-            async function collisionDetectionBricks () {
+            function collisionDetectionBricks () {
                 for (let i = 0; i < brickMaxColumnCount; i++) {
                     for (let j = 0; j < brickMaxRowCount; j++) {
                         const brick = brickList[i][j];
 
-                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0 && beforeYStatus !== ballYSpeed) {
+                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0) {
+                            if (brick.isCollision) {
+                                continue;
+                            }
+
+                            // const leftTopVector = brick.brickX
+                            // const beforeBallLocation = ballY -= Math.abs(ballYSpeed);
+
+                            brick.isCollision = true;
                             ballYSpeed = -ballYSpeed;
                             brick.brickLife -= ballPower;
                             score.value++;
 
                             if (score.value === brickLifeTotal) {
+                                for (let i = 0; i < 3; i++) {
+                                    const randomIndex = Math.floor(Math.random() * abilityList.length);
+
+                                    playerUpgradeList.value[i] = abilityList[randomIndex];
+                                }
+
                                 upgradeBricks();
                                 updateBricks();
+
+                                isPlayerUpgrade.value = true;
                             }
+                        } else {
+                            brick.isCollision = false;
                         }
                     }
                 }
@@ -287,6 +481,12 @@ export default defineComponent({
                     leftPressed = true;
                 } else if (e.key === "ArrowRight") {
                     rightPressed = true;
+                } else if (!isGameOver.value && e.code === "Space") {
+                    isPause.value = !isPause.value;
+
+                    if (!isPause.value) {
+                        renderGame();
+                    }
                 }
             }
 
@@ -318,8 +518,11 @@ export default defineComponent({
         return {
             mountedFunc,
             isGameOver,
-            isGameStart,
+            isPause,
             score,
+            isPlayerUpgrade,
+            playerUpgradeList,
+            playerInfo,
         }
     },
 });
