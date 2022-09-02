@@ -16,12 +16,12 @@
         <div class="w-30 ml-2">
         </div>
 
-        <custom-footer :version="'1.0'" :lastUpdate="'2022-09-01'"></custom-footer>
+        <custom-footer :version="'1.1'" :lastUpdate="'2022-09-02'"></custom-footer>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, onMounted, watch } from "vue";
 
 export default defineComponent({
     name: "BrickOut",
@@ -39,11 +39,12 @@ export default defineComponent({
 
             // ball info
             let ballX = Math.floor(canvas.width / 2);
-            let ballY = canvas.height - 30;
+            let ballY = canvas.height - 40;
             let ballXSpeed = 1;
             let ballYSpeed = -1;
             let ballRadius = 10;
             let ballPower = 1;
+            let beforeYStatus = ballYSpeed;
 
             // paddle info
             let paddleX = Math.floor(canvas.width / 2);
@@ -56,6 +57,45 @@ export default defineComponent({
 
             // brick info
             const brickList:Array<Array<any>> = [];
+            const brickColorList = [
+                "FF0000",
+                "FF2A00",
+                "FF5500",
+                "FF8000",
+                "FFAA00",
+                "FFD500",
+                "FFFF00",
+                "D4FF00",
+                "AAFF00",
+                "80FF00",
+                "55FF00",
+                "2BFF00",
+                "00FF00",
+                "00FF2A",
+                "00FF55",
+                "00FF80",
+                "00FFAA",
+                "00FFD5",
+                "00FFFF",
+                "00D5FF",
+                "00AAFF",
+                "0080FF",
+                "0055FF",
+                "002AFF",
+                "0000FF",
+                "2B00FF",
+                "5500FF",
+                "8000FF",
+                "AA00FF",
+                "D400FF",
+                "FF00FF",
+                "FF00D4",
+                "FF00AA",
+                "FF0080",
+                "FF0055",
+                "FF002B",
+            ]
+
             let brickWidth = 100;
             let brickHeight = 30;
             let brickMaxColumnCount = 5;
@@ -66,6 +106,18 @@ export default defineComponent({
             let brickPaddingY = 5;
             let brickLife = 1;
             let brickLifeTotal = 0;
+
+            // etc
+            let initalBeforeYStatus = false;
+
+            watch(score, () => {
+                beforeYStatus = ballYSpeed;
+
+                if (!initalBeforeYStatus) {
+                    beforeYStatus = -ballYSpeed;
+                    initalBeforeYStatus = true;
+                }
+            });
             
             mountedFunc.value.gameStart = () => {
                 updateGameInfo();
@@ -74,15 +126,11 @@ export default defineComponent({
             };
 
             function updateGameInfo () {
-                isGameOver.value = false;
-                isGameStart.value = true;
-                score.value = 0;
-
                 // ball info
                 ballX = Math.floor(canvas.width / 2);
                 ballY = canvas.height - 30;
-                ballXSpeed = 3;
-                ballYSpeed = -3;
+                ballXSpeed = 1.5;
+                ballYSpeed = -1.5;
                 ballRadius = 10;
                 ballPower = 1;
 
@@ -90,7 +138,7 @@ export default defineComponent({
                 paddleX = Math.floor(canvas.width / 2);
                 paddleY = canvas.height - 10;
                 paddleSpeed = 7;
-                paddleWidth = 170;
+                paddleWidth = 70;
                 paddleHeight = 10;
                 leftPressed = false;
                 rightPressed = false;
@@ -104,8 +152,12 @@ export default defineComponent({
                 brickOffsetLeft = 10;
                 brickPaddingX = 5;
                 brickPaddingY = 5;
-                brickLife = 1;
+                brickLife = 2;
                 brickLifeTotal = 0;
+
+                isGameOver.value = false;
+                isGameStart.value = true;
+                score.value = 0;
             }
 
             function updateBricks () {
@@ -147,6 +199,7 @@ export default defineComponent({
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
                     isGameOver.value = true;
                     isGameStart.value = false;
+                    initalBeforeYStatus = false;
 
                     cancelAnimationFrame(animationId);
                 } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
@@ -193,26 +246,31 @@ export default defineComponent({
                             brick.brickY = brickY;
 
                             context.beginPath();
-                            context.fillStyle = "#0F94CD";
+                            context.fillStyle = `#${brickColorList[brick.brickLife % 36]}`;
                             context.fillRect(brickX, brickY, brickWidth, brickHeight);
                             context.closePath();
+                            context.font = "12px Arial";
+                            context.fillStyle = "#000000";
+                            context.fillText(brick.brickLife, brickX + Math.floor(brickWidth / 2) - 3, brickY + Math.floor(brickHeight / 2) + 2);
                         }
                     }
                 }
             }
 
             function upgradeBricks () {
+                ballX = Math.floor(canvas.width / 2);
+                ballY = canvas.height - 30;
                 brickLife++;
             }
             
-            function collisionDetectionBricks () {
+            async function collisionDetectionBricks () {
                 for (let i = 0; i < brickMaxColumnCount; i++) {
                     for (let j = 0; j < brickMaxRowCount; j++) {
                         const brick = brickList[i][j];
 
-                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0) {
-                            brick.brickLife -= ballPower;
+                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0 && beforeYStatus !== ballYSpeed) {
                             ballYSpeed = -ballYSpeed;
+                            brick.brickLife -= ballPower;
                             score.value++;
 
                             if (score.value === brickLifeTotal) {
