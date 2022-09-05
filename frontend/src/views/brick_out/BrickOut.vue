@@ -48,7 +48,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
-// import { Vector } from "@utils/Vector";
+import Vector from "../../utils/Vector";
 
 export default defineComponent({
     name: "BrickOut",
@@ -60,7 +60,6 @@ export default defineComponent({
         const playerUpgradeList:any = ref([]);
         const playerInfo:any = ref({});
         const isPause = ref(false);
-        // new Vector(1, 1);
 
         onMounted(() => {
             const canvas = document.getElementById("brick-out-canvas") as HTMLCanvasElement;
@@ -200,8 +199,8 @@ export default defineComponent({
                 // ball info
                 ballX = Math.floor(canvas.width / 2);
                 ballY = canvas.height - 30;
-                ballXSpeed = 7.5;
-                ballYSpeed = -7.5;
+                ballXSpeed = 1.5;
+                ballYSpeed = -1.5;
                 ballRadius = 10;
                 ballPower = 1;
                 ballCriticalChance = 0;

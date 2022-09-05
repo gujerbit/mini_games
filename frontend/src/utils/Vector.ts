@@ -1,10 +1,10 @@
-export class Vector {
+export default class Vector {
 
     private x:number;
     private y:number;
     private z:number;
 
-    constructor (x:number, y:number, z:number = 0) {
+    constructor (x:number, y:number, z = 0) {
         this.x = x;
         this.y = y;
         this.z = z;
