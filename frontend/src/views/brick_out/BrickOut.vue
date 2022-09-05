@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <custom-footer :version="'1.1'" :lastUpdate="'2022-09-02'"></custom-footer>
+        <custom-footer :version="'1.2'" :lastUpdate="'2022-09-05'"></custom-footer>
     </div>
 </template>
 
@@ -66,6 +66,9 @@ export default defineComponent({
             const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
             // ball info
+            const ballPosition = new Vector(Math.floor(canvas.width / 2), canvas.height - 30);
+            const ballVelocity = new Vector(1, -1);
+
             let ballX = Math.floor(canvas.width / 2);
             let ballY = canvas.height - 30;
             let ballXSpeed = 1;
@@ -277,25 +280,47 @@ export default defineComponent({
             }
 
             function renderBall () {
-                if (ballX + ballXSpeed > canvas.width - ballRadius || ballX + ballXSpeed < ballRadius) {
-                    ballXSpeed = -ballXSpeed;
+                // if (ballX + ballXSpeed > canvas.width - ballRadius || ballX + ballXSpeed < ballRadius) {
+                //     ballXSpeed = -ballXSpeed;
+                // }
+
+                // if (ballY + ballYSpeed < ballRadius) {
+                //     ballYSpeed = -ballYSpeed;
+                // } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
+                //     isGameOver.value = true;
+
+                //     cancelAnimationFrame(animationId);
+                // } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
+                //     ballYSpeed = -ballYSpeed;
+                // }
+
+                // ballX += ballXSpeed;
+                // ballY += ballYSpeed;
+
+                // context.beginPath();
+                // context.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+                // context.fillStyle = "#FF00FF";
+                // context.fill();
+                // context.closePath();
+
+                if (ballPosition.x + ballVelocity.x > canvas.width - ballRadius || ballPosition.x + ballVelocity.x < ballRadius) {
+                    ballVelocity.x *= -1;
                 }
 
-                if (ballY + ballYSpeed < ballRadius) {
-                    ballYSpeed = -ballYSpeed;
-                } else if (ballY + ballYSpeed > canvas.height - ballRadius) {
+                if (ballPosition.y + ballVelocity.y < ballRadius) {
+                    ballVelocity.y *= -1;
+                } else if (ballPosition.y + ballVelocity.y > canvas.height - ballRadius) {
                     isGameOver.value = true;
 
                     cancelAnimationFrame(animationId);
-                } else if (ballY + ballYSpeed > canvas.height - ballRadius - paddleHeight && ballX > paddleX && ballX < paddleX + paddleWidth && ballYSpeed > 0) {
-                    ballYSpeed = -ballYSpeed;
+                } else if (ballPosition.y + ballVelocity.y > canvas.height - ballRadius - paddleHeight && ballPosition.x > paddleX && ballPosition.x < paddleX + paddleWidth && ballVelocity.y > 0) {
+                    ballVelocity.y *= -1;
                 }
 
-                ballX += ballXSpeed;
-                ballY += ballYSpeed;
+                ballPosition.add(ballVelocity);
 
                 context.beginPath();
-                context.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+                context.arc(ballPosition.x, ballPosition.y, ballRadius, 0, Math.PI * 2);
                 context.fillStyle = "#FF00FF";
                 context.fill();
                 context.closePath();

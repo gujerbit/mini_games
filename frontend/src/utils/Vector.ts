@@ -1,8 +1,8 @@
 export default class Vector {
 
-    private x:number;
-    private y:number;
-    private z:number;
+    x:number;
+    y:number;
+    z:number;
 
     constructor (x:number, y:number, z = 0) {
         this.x = x;
@@ -10,18 +10,10 @@ export default class Vector {
         this.z = z;
     }
 
-    sum (vector:Vector) {
+    add (vector:Vector) {
         this.x += vector.x;
         this.y += vector.y;
         this.z += vector.z;
-
-        return this;
-    }
-
-    reverse () {
-        this.x = -this.x;
-        this.y = -this.y;
-        this.z = -this.z;
 
         return this;
     }
