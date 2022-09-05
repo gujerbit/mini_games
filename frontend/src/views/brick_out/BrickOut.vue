@@ -48,6 +48,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
+// import { Vector } from "@utils/Vector";
 
 export default defineComponent({
     name: "BrickOut",
@@ -59,6 +60,7 @@ export default defineComponent({
         const playerUpgradeList:any = ref([]);
         const playerInfo:any = ref({});
         const isPause = ref(false);
+        // new Vector(1, 1);
 
         onMounted(() => {
             const canvas = document.getElementById("brick-out-canvas") as HTMLCanvasElement;
@@ -444,16 +446,40 @@ export default defineComponent({
                     for (let j = 0; j < brickMaxRowCount; j++) {
                         const brick = brickList[i][j];
 
-                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX + ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY + ballRadius && brick.brickLife > 0) {
+                        if (ballX < brick.brickX + brickWidth + ballRadius && ballX > brick.brickX - ballRadius && ballY < brick.brickY + brickHeight + ballRadius && ballY > brick.brickY - ballRadius && brick.brickLife > 0) {
                             if (brick.isCollision) {
                                 continue;
                             }
 
-                            // const leftTopVector = brick.brickX
-                            // const beforeBallLocation = ballY -= Math.abs(ballYSpeed);
+                            const leftTopPoint = {
+                                x: brick.brickX - ballRadius,
+                                y: brick.brickY - ballRadius,
+                            };
+
+                            const rightTopPoint = {
+                                x: brick.brickX + brickWidth + ballRadius,
+                                y: brick.brickY - ballRadius,
+                            };
+
+                            const leftBottomPoint = {
+                                x: brick.brickX - ballRadius,
+                                y: brick.brickY + brickHeight + ballRadius,
+                            };
+
+                            const rightBottomPoint = {
+                                x: brick.brickX + brickWidth + ballRadius,
+                                y: brick.brickY + brickHeight + ballRadius,
+                            };
+
+                            // if ((leftTopPoint.x < ballX && rightTopPoint.x > ballX && leftTopPoint.y <= ballY && leftTopPoint.y + ballYSpeed >= ballY) || (leftBottomPoint.x < ballX && rightBottomPoint.x > ballX && leftBottomPoint.y >= ballY && leftBottomPoint.y - ballYSpeed <= ballY)) {
+                            //     ballYSpeed = -ballYSpeed;
+                            // } else if ((leftTopPoint.y < ballY && leftBottomPoint.y > ballY && leftTopPoint.x <= ballX && leftTopPoint.x + ballXSpeed >= ballX) || (rightTopPoint.y < ballY && rightBottomPoint.y > ballY && rightTopPoint.x >= ballX && rightTopPoint.x - ballXSpeed <= ballX)) {
+                            //     ballXSpeed = -ballXSpeed;
+                            // }
+
+                            ballYSpeed = -ballYSpeed;
 
                             brick.isCollision = true;
-                            ballYSpeed = -ballYSpeed;
                             brick.brickLife -= ballPower;
                             score.value++;
 
