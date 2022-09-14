@@ -15,4 +15,12 @@ module.exports = {
             },
         },
     },
+    devServer: {
+        proxy: {
+            "/room": {
+                target: "http://localhost:3001",
+                chainOrigin: true,
+            },
+        },
+    },
 };

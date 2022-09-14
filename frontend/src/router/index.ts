@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 import Main from "@views/main/Main.vue";
+import Login from "@views/login/Login.vue";
 import Sudoku from "@views/sudoku/Sudoku.vue";
 import Minesweeper from "@views/minesweeper/Minesweeper.vue";
 
@@ -8,17 +9,38 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: "/",
         name: "Main",
-        component: Main
+        component: Main,
+        children: [
+            {
+                path: "/sudoku",
+                name: "Sudoku",
+                component: Sudoku,
+            },
+            {
+                path: "/minesweeper",
+                name: "Minesweeper",
+                component: Minesweeper,
+            },
+        ],
+        beforeEnter: (to, from, next) => {
+            if (window.sessionStorage.getItem("userName")) {
+                next();
+            } else {
+                next("/login");
+            }
+        },
     },
     {
-        path: "/sudoku",
-        name: "Sudoku",
-        component: Sudoku,
-    },
-    {
-        path: "/minesweeper",
-        name: "Minesweeper",
-        component: Minesweeper,
+        path: "/login",
+        name: "Login",
+        component: Login,
+        // beforeEnter: (to, from, next) => {
+        //     if (window.sessionStorage.getItem("userName")) {
+        //         next("/");
+        //     } else {
+        //         next();
+        //     }
+        // },
     },
     // {
     //     path: '/about',

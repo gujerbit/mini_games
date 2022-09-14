@@ -1,5 +1,5 @@
 <template>
-    <input ref="input" @input="$emit('update:modelValue', $event.target.value)" :value="modelValue" class="p-1 border border-black rounded text-center" type="number">
+    <input ref="input" @input="$emit('update:modelValue', $event.target.value)" :value="modelValue" class="p-1 border border-black rounded text-center">
 </template>
 
 <script lang="ts">

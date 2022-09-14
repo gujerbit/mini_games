@@ -1,5 +1,5 @@
 <template>
-    <div id="container">
+    <div id="container" class="w-full h-full">
         <router-view></router-view>
     </div>
 </template>
