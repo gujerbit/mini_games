@@ -3,7 +3,6 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Main from "@views/main/Main.vue";
 import Sudoku from "@views/sudoku/Sudoku.vue";
 import Minesweeper from "@views/minesweeper/Minesweeper.vue";
-import BrickOut from "@views/brick_out/BrickOut.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -20,11 +19,6 @@ const routes: Array<RouteRecordRaw> = [
         path: "/minesweeper",
         name: "Minesweeper",
         component: Minesweeper,
-    },
-    {
-        path: "/brick-out",
-        name: "BrickOut",
-        component: BrickOut,
     },
     // {
     //     path: '/about',
